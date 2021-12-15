@@ -238,12 +238,6 @@ class RiverGeneration:
         return river_path
 
 
-rg = RiverGeneration(1000, 100)
-start_edges = rg.get_start_edges()
-end_points = rg.get_end_points()
-res = rg.get_path_from_starts_and_finishes(start_edges, end_points)
-
-
 # lowest_poly_vertices = list(
 #     next(groupby(sorted(rg.bounding_poly.points, key=lambda p: p.y),
 #                  key=lambda x: x.y))[1])
@@ -271,26 +265,6 @@ def plot_vertices(self, vertices=None, **kwargs):
     self.canvas.scatter(xs, ys, s=50, color=color, zorder=10, **kwargs)
 
     return self
-
-
-Visualizer.plot_vertices = plot_vertices
-
-
-Visualizer(rg.voronoi) \
-    .plot_sites(show_labels=False) \
-    .plot_edges(show_labels=False) \
-    .plot_edges(start_edges, show_labels=False, color='red') \
-    .plot_vertices() \
-    .plot_vertices(end_points, color='red') \
-    .plot_vertices(res, color='green') \
-    .show()
-
-# print(*sorted(j.xy for i in start_edges for j in (i.origin, i.target)))
-# rg.get_start_edges_from_points({sorted((j for i in start_edges for j in (i.origin, i.target)), key=lambda p: p.xy)[0]})
-# rg.get_points_on_lines({bad_point}, polygon_lines_eqs_coefficients)
-
-
-# print(res)
 
 
 def plot_vertices_in_line(vertices):
@@ -475,6 +449,11 @@ def get_poly_wo_self_intersection(polygon):
 # plot_vertices_in_line(res)
 
 def main():
+    rg = RiverGeneration(1000, 100)
+    start_edges = rg.get_start_edges()
+    end_points = rg.get_end_points()
+    res = rg.get_path_from_starts_and_finishes(start_edges, end_points)
+
     Visualizer.plot_vertices = plot_vertices
 
     Visualizer(rg.voronoi) \
