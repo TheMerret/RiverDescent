@@ -1,5 +1,5 @@
 from itertools import groupby
-from typing import List, Dict
+from typing import List, Dict, Set
 import heapq
 import random
 
@@ -106,7 +106,7 @@ class RiverGeneration:
         x, y = round(p[0], precision), round(p[1], precision)
         return a * x + b * y == c
 
-    def get_points_on_lines(self, points: set[Vertex], line_eqs_coefficients):
+    def get_points_on_lines(self, points: Set[Vertex], line_eqs_coefficients):
         points_on_lines = set()
         for i in points:
             if any(self.is_point_on_line(i.xy, a, b, c) for a, b, c in line_eqs_coefficients):
@@ -114,7 +114,7 @@ class RiverGeneration:
 
         return points_on_lines
 
-    def get_start_edges_from_points(self, points: set[Vertex]):
+    def get_start_edges_from_points(self, points: Set[Vertex]):
         """Находим ребря не лежащие на ограничивающем полигоне"""
         extended_vertices = {j for i in points for j in i.connected_edges}
         start_edges = set()
