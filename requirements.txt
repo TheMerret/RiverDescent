@@ -1,2 +1,3 @@
 foronoi
 shapely
+svgpathtools
