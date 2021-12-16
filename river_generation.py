@@ -208,15 +208,30 @@ class RiverGeneration:
                                           for p1, p2 in polygon_lines]
         if any(self.is_point_on_line(p2, a, b, c)
                for a, b, c in polygon_lines_eqs_coefficients):
-            return None
+            return float('inf')
         return 0
 
-    def get_path_from_starts_and_finishes(self, start_edges, end_points):
+    def get_start_and_end_path_variants(self):
+        start_edges = self.get_start_edges()
+        end_points = self.get_end_points()
+        return start_edges, end_points
+
+    @staticmethod
+    def get_start_and_end_from_variants(start_end_variants):
+        start_edges, end_points = start_end_variants
         # random.seed(2)
         start_edge = random.choice(list(start_edges))
         start = start_edge.target
         # random.seed(2)
         end = random.choice(list(end_points))
+        return start, end
+
+    def get_start_and_end(self):
+        start_end_variants = self.get_start_and_end_path_variants()
+        start, end = self.get_start_and_end_from_variants(start_end_variants)
+        return start, end
+
+    def get_path_from_start_and_end(self, start, end):
         start, end = start.xy, end.xy
         came_from, cost_so_far = self.a_star_search(start, end)
 
@@ -232,9 +247,8 @@ class RiverGeneration:
         return path
 
     def get_river_path(self):
-        start_edges = self.get_start_edges()
-        end_points = self.get_end_points()
-        river_path = self.get_path_from_starts_and_finishes(start_edges, end_points)
+        start, end = self.get_start_and_end()
+        river_path = self.get_path_from_start_and_end(start, end)
         return river_path
 
 
@@ -419,7 +433,7 @@ def remove_self_intersections(polygon):
     prev_lines = []
     for nxt in it_lines:
         intersection = get_intersection(*prev, *nxt)
-        if not(intersection is None or intersection == float('inf')):
+        if not (intersection is None or intersection == float('inf')):
             yield from (p for ln in prev_lines for p in ln)
             prev_lines.clear()
             print(intersection)
@@ -448,22 +462,28 @@ def get_poly_wo_self_intersection(polygon):
 
 # plot_vertices_in_line(res)
 
+def viz_river_generation(voronoi: Voronoi, edges, points, path_points=None):
+    Visualizer.plot_vertices = plot_vertices
+
+    viz = Visualizer(voronoi) \
+        .plot_sites(show_labels=False) \
+        .plot_edges(show_labels=False) \
+        .plot_edges(edges, show_labels=False, color='red') \
+        .plot_vertices() \
+        .plot_vertices(points, color='red')
+    if path_points:
+        viz = viz.plot_vertices(path_points, color='green')
+    viz.show()
+
+
 def main():
     rg = RiverGeneration(1000, 100)
     start_edges = rg.get_start_edges()
     end_points = rg.get_end_points()
-    res = rg.get_path_from_starts_and_finishes(start_edges, end_points)
+    start, end = rg.get_start_and_end_from_variants((start_edges, end_points))
+    res = rg.get_path_from_start_and_end(start, end)
 
-    Visualizer.plot_vertices = plot_vertices
-
-    Visualizer(rg.voronoi) \
-        .plot_sites(show_labels=False) \
-        .plot_edges(show_labels=False) \
-        .plot_edges(start_edges, show_labels=False, color='red') \
-        .plot_vertices() \
-        .plot_vertices(end_points, color='red') \
-        .plot_vertices(res, color='green') \
-        .show()
+    viz_river_generation(rg.voronoi, start_edges, end_points, res)
 
     line = [i.xy for i in res]
     poly_res = polygon_from_line(line, 30)
