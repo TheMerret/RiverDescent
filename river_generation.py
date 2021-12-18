@@ -12,6 +12,8 @@ from foronoi import Voronoi, Polygon, Visualizer, Point, VoronoiObserver
 from foronoi.visualization.visualizer import Colors
 from foronoi.graph import HalfEdge, Vertex
 
+from utils import get_closed_polyline_from_line, get_polyline_wo_self_intersection
+
 
 def path_vertex(vertex: Vertex):
     def __gt__(self, other):
@@ -251,6 +253,18 @@ class RiverGeneration:
         river_path = self.get_path_from_start_and_end(start, end)
         return river_path
 
+    @staticmethod
+    def get_expanded_river_exterior_from_path(river_path, width):
+        exterior = get_closed_polyline_from_line(river_path, width)
+        exterior = get_polyline_wo_self_intersection(exterior)
+        return exterior
+
+    def get_river_exterior(self, width):
+        river_path = self.get_river_path()
+        river_path = [i.xy for i in river_path]
+        river_exterior = self.get_expanded_river_exterior_from_path(river_path, width)
+        return river_exterior
+
 
 # lowest_poly_vertices = list(
 #     next(groupby(sorted(rg.bounding_poly.points, key=lambda p: p.y),
@@ -288,171 +302,6 @@ def plot_vertices_in_line(vertices):
     plt.show()
 
 
-def normalize(vector):
-    x, y = vector
-    mag = (x ** 2 + y ** 2) ** .5
-    if mag > 0:
-        return x / mag, y / mag
-    return vector
-
-
-def vector_from_points(p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
-    vector = x2 - x1, y2 - y1
-    return vector
-
-
-def perpendicular_counter_clockwise(vector):
-    return -vector[1], vector[0]
-
-
-def perpendicular_clockwise(vector):
-    return vector[1], -vector[0]
-
-
-def mul_vector(vector, k):
-    return vector[0] * k, vector[1] * k
-
-
-def offset_straight_line(start_pos, end_pos, offset):
-    origin_line = start_pos, end_pos
-    offset_vector = mul_vector(
-        perpendicular_counter_clockwise(normalize(vector_from_points(start_pos, end_pos))), offset)
-    res_line = [(x + offset_vector[0], y + offset_vector[1]) for x, y in origin_line]
-    return res_line
-
-
-def offset_line(line_coordinates, offset):
-    pairs = zip(line_coordinates, line_coordinates[1:])
-    offset_segments = (offset_straight_line(start, end, offset) for start, end in pairs)
-    offset_segments = iter(offset_segments)
-    start = next(offset_segments)
-    yield from start
-    for seg in offset_segments:
-        yield from seg
-
-
-def polygon_from_line(coordinates, width):
-    left = offset_line(coordinates, width)
-    left = list(left)
-    right = offset_line(coordinates, -width)
-    polygon = left + list(right)[::-1] + [left[0]]
-    return polygon
-
-
-# Given three collinear points p, q, r, the function checks if
-# point q lies on line segment 'pr'
-def is_on_segment(p, q, r):
-    if ((q[0] <= max(p[0], r[0])) and (q[0] >= min(p[0], r[0])) and
-            (q[1] <= max(p[1], r[1])) and (q[1] >= min(p[1], r[1]))):
-        return True
-    return False
-
-
-def get_orientation(p, q, r):
-    # to find the orientation of an ordered triplet (p,q,r)
-    # function returns the following values:
-    # 0 : Collinear points
-    # 1 : Clockwise points
-    # 2 : Counterclockwise
-
-    # See https://www.geeksforgeeks.org/orientation-3-ordered-points/amp/
-    # for details of below formula.
-
-    val = (float(q[1] - p[1]) * (r[0] - q[0])) - (float(q[0] - p[0]) * (r[1] - q[1]))
-    if val > 0:
-
-        # Clockwise orientation
-        return 1
-    elif val < 0:
-
-        # Counterclockwise orientation
-        return 2
-    else:
-
-        # Collinear orientation
-        return 0
-
-
-# The main function that returns true if
-# the line segment 'p1q1' and 'p2q2' intersect.
-def is_intersects(p1, q1, p2, q2):
-    # Find the 4 orientations required for
-    # the general and special cases
-    o1 = get_orientation(p1, q1, p2)
-    o2 = get_orientation(p1, q1, q2)
-    o3 = get_orientation(p2, q2, p1)
-    o4 = get_orientation(p2, q2, q1)
-
-    # General case
-    if (o1 != o2) and (o3 != o4):
-        return True
-
-    # Special Cases
-
-    # p1 , q1 and p2 are collinear and p2 lies on segment p1q1
-    if (o1 == 0) and is_on_segment(p1, p2, q1):
-        return True
-
-    # p1 , q1 and q2 are collinear and q2 lies on segment p1q1
-    if (o2 == 0) and is_on_segment(p1, q2, q1):
-        return True
-
-    # p2 , q2 and p1 are collinear and p1 lies on segment p2q2
-    if (o3 == 0) and is_on_segment(p2, p1, q2):
-        return True
-
-    # p2 , q2 and q1 are collinear and q1 lies on segment p2q2
-    if (o4 == 0) and is_on_segment(p2, q1, q2):
-        return True
-
-    # If none of the cases
-    return False
-
-
-def get_intersection(p1, q1, p2, q2):
-    if not is_intersects(p1, q1, p2, q2):
-        return None
-    # https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
-    denominator = (p1[0] - q1[0]) * (p2[1] - q2[1]) - (p1[1] - q1[1]) * (p2[0] - q2[0])
-    if denominator == 0:
-        return float('inf')  # совпадают
-    x = ((p1[0] * q1[1] - p1[1] * q1[0]) * (p2[0] - q2[0]) - (p1[0] - q1[0]) * (
-            p2[0] * q2[1] - p2[1] * q2[0])) / denominator
-    y = ((p1[0] * q1[1] - p1[1] * q1[0]) * (p2[1] - q2[1]) - (p1[1] - q1[1]) * (
-            p2[0] * q2[1] - p2[1] * q2[0])) / denominator
-    return x, y
-
-
-def remove_self_intersections(polygon):
-    lines = zip(polygon[::2], polygon[1::2])
-    it_lines = iter(lines)
-    start = next(it_lines)
-    prev = start
-    prev_lines = []
-    for nxt in it_lines:
-        intersection = get_intersection(*prev, *nxt)
-        if not (intersection is None or intersection == float('inf')):
-            yield from (p for ln in prev_lines for p in ln)
-            prev_lines.clear()
-            print(intersection)
-            yield prev[0]
-            yield intersection
-            yield nxt[1]
-            nxt = (intersection, nxt[1])
-        else:
-            prev_lines.append(prev)
-        prev = nxt
-    yield from (p for ln in prev_lines for p in ln)
-    yield prev[1]
-    yield start[0]
-
-
-def get_poly_wo_self_intersection(polygon):
-    return list(remove_self_intersections(polygon))
-
-
 # line = geometry.LineString([i.xy for i in res])
 # poly = geometry.Polygon(polygon_from_line([i.xy for i in res], 20))
 #
@@ -481,24 +330,42 @@ def main():
     start_edges = rg.get_start_edges()
     end_points = rg.get_end_points()
     start, end = rg.get_start_and_end_from_variants((start_edges, end_points))
-    res = rg.get_path_from_start_and_end(start, end)
+    river_path = rg.get_path_from_start_and_end(start, end)
 
-    viz_river_generation(rg.voronoi, start_edges, end_points, res)
+    # viz_river_generation(rg.voronoi, start_edges, end_points, res)
 
-    line = [i.xy for i in res]
-    poly_res = polygon_from_line(line, 30)
-    print(poly_res)
-    poly_repaired = get_poly_wo_self_intersection(poly_res)
-    # poly_repaired = get_poly_wo_self_intersection(poly_repaired)
-    poly = geometry.Polygon(poly_res)
+    # river_path = [i.xy for i in river_path]
+    river_path = [(553.7137223974763, 64.40496845425868), (587.873246492986, 64.11548096192385),
+                  (510.1274787535411, 196.28328611898016), (515.7948066610218, 205.83234546994072),
+                  (480.9682926829268, 300.8137472283814), (464.0598548972189, 307.5386940749698),
+                  (452.2993931220499, 313.4865138233311), (428.81779067440465, 354.4725835501301),
+                  (428.1423974255833, 358.31938857602574), (373.6608738828203, 393.45233366434957),
+                  (359.9140127388535, 397.52547770700636), (325.92243975903614, 431.83772590361446),
+                  (326.9146341463415, 434.979674796748), (293.05737704918033, 559.1229508196722),
+                  (286.42814371257487, 566.5808383233533), (314.6855072463768, 633.1033816425121),
+                  (293.5143947655398, 735.430425299891), (294.07797427652736, 736.5176848874598),
+                  (145.9178544636159, 806.5570142535634), (137.80255839822024, 817.6779755283649),
+                  (113.0820170109356, 828.0370595382747), (99.52080257683532, 841.8963226412562),
+                  (61.98032520325203, 856.7978861788617), (68.42957746478874, 923.0492957746479),
+                  (11.0, 945.5217391304348), (10.999999999999986, 970.4772727272726),
+                  (51.38888888888906, 987.0)]
+
+    raw_river_polyline = get_closed_polyline_from_line(river_path, 20)
+    print(raw_river_polyline)
+    river_polyline_repaired = get_polyline_wo_self_intersection(raw_river_polyline)
+    # river_polyline_repaired = [(650.0050442508174, 102.08098053052966),
+    #                            (652.1867584772918, 108.35340893164364),
+    #                            (652.9105374339, 101.070374206),
+    #                            (650.0050442508174, 102.08098053052966)]
+    poly = geometry.Polygon(river_polyline_repaired)
 
     print(validation.explain_validity(poly))
 
     plt.gca().set_aspect('equal')
-    plt.plot(*zip(*line))
+    plt.plot(*zip(*river_path))
     # plt.plot(*poly.buffer(0).exterior.xy, color='red')
     # plt.plot(*zip(*poly_res), color='red')
-    plt.plot(*zip(*poly_repaired), color='green')
+    plt.plot(*zip(*river_polyline_repaired), color='green')
     plt.show()
 
 
