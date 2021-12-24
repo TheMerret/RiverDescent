@@ -28,7 +28,7 @@ def river_smooth_svg():
     rg = RiverGeneration(1000, 100)
     river_path = rg.get_river_path()
     river_path = [i.xy for i in river_path]
-    river_exterior = rg.get_expanded_river_exterior_from_path(river_path, 20)
+    river_exterior = rg.get_expanded_river_exterior_from_path2(river_path, 20)
     res = None
     if len(river_exterior) < 10:
         print(river_path)

@@ -1,3 +1,6 @@
+from clipper.clipper import OffsetPolyLines, Point, JoinType, EndType
+
+
 def catmull_rom2bezier_svg(points, close=False):
     k = 8  # roughness
     points = [j for i in points for j in i]
@@ -237,4 +240,13 @@ def get_polyline_wo_self_intersection(polyline):
         else:
             if line is not None:
                 res.append(line[1])
+    return res[::-1]
+
+
+def offset_polyline(polyline, offset):
+    polyline = [[Point(*i) for i in polyline]]
+    res = OffsetPolyLines(polyline, offset, jointype=JoinType.Round, endtype=EndType.Butt)[0]
+    res = [(i.x, i.y) for i in res]
+    if res[0] != res[-1]:
+        res.append(res[0])
     return res

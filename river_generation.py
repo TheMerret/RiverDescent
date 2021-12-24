@@ -12,7 +12,7 @@ from foronoi import Voronoi, Polygon, Visualizer, Point, VoronoiObserver
 from foronoi.visualization.visualizer import Colors
 from foronoi.graph import HalfEdge, Vertex
 
-from utils import get_closed_polyline_from_line, get_polyline_wo_self_intersection
+from utils import get_closed_polyline_from_line, get_polyline_wo_self_intersection, offset_polyline
 
 
 def path_vertex(vertex: Vertex):
@@ -259,10 +259,15 @@ class RiverGeneration:
         exterior = get_polyline_wo_self_intersection(exterior)
         return exterior
 
+    @staticmethod
+    def get_expanded_river_exterior_from_path2(river_path, width):
+        exterior = offset_polyline(river_path, width)
+        return exterior
+
     def get_river_exterior(self, width):
         river_path = self.get_river_path()
         river_path = [i.xy for i in river_path]
-        river_exterior = self.get_expanded_river_exterior_from_path(river_path, width)
+        river_exterior = self.get_expanded_river_exterior_from_path2(river_path, width)
         return river_exterior
 
 
@@ -334,21 +339,21 @@ def main():
 
     # viz_river_generation(rg.voronoi, start_edges, end_points, res)
 
-    # river_path = [i.xy for i in river_path]
-    river_path = [(553.7137223974763, 64.40496845425868), (587.873246492986, 64.11548096192385),
-                  (510.1274787535411, 196.28328611898016), (515.7948066610218, 205.83234546994072),
-                  (480.9682926829268, 300.8137472283814), (464.0598548972189, 307.5386940749698),
-                  (452.2993931220499, 313.4865138233311), (428.81779067440465, 354.4725835501301),
-                  (428.1423974255833, 358.31938857602574), (373.6608738828203, 393.45233366434957),
-                  (359.9140127388535, 397.52547770700636), (325.92243975903614, 431.83772590361446),
-                  (326.9146341463415, 434.979674796748), (293.05737704918033, 559.1229508196722),
-                  (286.42814371257487, 566.5808383233533), (314.6855072463768, 633.1033816425121),
-                  (293.5143947655398, 735.430425299891), (294.07797427652736, 736.5176848874598),
-                  (145.9178544636159, 806.5570142535634), (137.80255839822024, 817.6779755283649),
-                  (113.0820170109356, 828.0370595382747), (99.52080257683532, 841.8963226412562),
-                  (61.98032520325203, 856.7978861788617), (68.42957746478874, 923.0492957746479),
-                  (11.0, 945.5217391304348), (10.999999999999986, 970.4772727272726),
-                  (51.38888888888906, 987.0)]
+    river_path = [i.xy for i in river_path]
+    # river_path = [(553.7137223974763, 64.40496845425868), (587.873246492986, 64.11548096192385),
+    #               (510.1274787535411, 196.28328611898016), (515.7948066610218, 205.83234546994072),
+    #               (480.9682926829268, 300.8137472283814), (464.0598548972189, 307.5386940749698),
+    #               (452.2993931220499, 313.4865138233311), (428.81779067440465, 354.4725835501301),
+    #               (428.1423974255833, 358.31938857602574), (373.6608738828203, 393.45233366434957),
+    #               (359.9140127388535, 397.52547770700636), (325.92243975903614, 431.83772590361446),
+    #               (326.9146341463415, 434.979674796748), (293.05737704918033, 559.1229508196722),
+    #               (286.42814371257487, 566.5808383233533), (314.6855072463768, 633.1033816425121),
+    #               (293.5143947655398, 735.430425299891), (294.07797427652736, 736.5176848874598),
+    #               (145.9178544636159, 806.5570142535634), (137.80255839822024, 817.6779755283649),
+    #               (113.0820170109356, 828.0370595382747), (99.52080257683532, 841.8963226412562),
+    #               (61.98032520325203, 856.7978861788617), (68.42957746478874, 923.0492957746479),
+    #               (11.0, 945.5217391304348), (10.999999999999986, 970.4772727272726),
+    #               (51.38888888888906, 987.0)]
 
     raw_river_polyline = get_closed_polyline_from_line(river_path, 20)
     print(raw_river_polyline)
@@ -358,7 +363,10 @@ def main():
     #                            (652.9105374339, 101.070374206),
     #                            (650.0050442508174, 102.08098053052966)]
     poly = geometry.Polygon(river_polyline_repaired)
+    print(validation.explain_validity(poly))
 
+    test_polyline = offset_polyline(river_path, 20)
+    poly = geometry.Polygon(test_polyline)
     print(validation.explain_validity(poly))
 
     plt.gca().set_aspect('equal')
@@ -366,6 +374,7 @@ def main():
     # plt.plot(*poly.buffer(0).exterior.xy, color='red')
     # plt.plot(*zip(*poly_res), color='red')
     plt.plot(*zip(*river_polyline_repaired), color='green')
+    plt.plot(*zip(*test_polyline), color='red')
     plt.show()
 
 
