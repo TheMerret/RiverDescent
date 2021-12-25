@@ -1,3 +1,4 @@
+import math
 from clipper.clipper import OffsetPolyLines, Point, JoinType, EndType
 
 
@@ -250,3 +251,31 @@ def offset_polyline(polyline, offset):
     if res[0] != res[-1]:
         res.append(res[0])
     return res
+
+
+def vector_from_points(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    vector = x2 - x1, y2 - y1
+    return vector
+
+
+def dot_product(v1, v2):
+    dot = v1[0] * v2[0] + v1[1] * v2[1]
+    return dot
+
+
+def vector_length(vector):
+    length = (vector[0] ** 2 + vector[1] ** 2) ** .5
+    return length
+
+
+def is_perpendicular(line, other_line):
+    vector1 = vector_from_points(*line)
+    vector2 = vector_from_points(*other_line)
+    dot = dot_product(vector1, vector2)
+    cosine_between = dot / (vector_length(vector1) * vector_length(vector2))
+    cosine_between = round(cosine_between, 14)
+    angle = math.degrees(math.acos(cosine_between))
+    angle = round(int(angle) + 1, -1)
+    return angle == 90

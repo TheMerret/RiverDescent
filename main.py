@@ -14,5 +14,13 @@ def get_river_exterior():
     return river_exterior
 
 
+def get_river_geometry():
+    """Возвращает объект геометрии реки с разделенным правым и левым берегом"""
+    rg = RiverGeneration(1000, 100)
+    river_geom = rg.get_river_geom(20)
+    # river_geom.right_bank - правый берег
+    return river_geom
+
+
 if __name__ == '__main__':
-    print(get_river_exterior())
+    print(get_river_geometry())

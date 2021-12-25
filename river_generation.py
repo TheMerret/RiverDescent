@@ -12,7 +12,8 @@ from foronoi import Voronoi, Polygon, Visualizer, Point, VoronoiObserver
 from foronoi.visualization.visualizer import Colors
 from foronoi.graph import HalfEdge, Vertex
 
-from utils import get_closed_polyline_from_line, get_polyline_wo_self_intersection, offset_polyline
+from utils import get_closed_polyline_from_line, get_polyline_wo_self_intersection, offset_polyline, \
+    is_perpendicular
 
 
 def path_vertex(vertex: Vertex):
@@ -233,7 +234,7 @@ class RiverGeneration:
         start, end = self.get_start_and_end_from_variants(start_end_variants)
         return start, end
 
-    def get_path_from_start_and_end(self, start, end):
+    def get_path_from_start_and_end(self, start, end, as_vertices=False):
         start, end = start.xy, end.xy
         came_from, cost_so_far = self.a_star_search(start, end)
 
@@ -244,8 +245,9 @@ class RiverGeneration:
             current = came_from[current]
         path.append(start)
         path.reverse()
-        point_to_vert = {i.xy: i for i in self.graph.vertex_edges}
-        path = [point_to_vert[i] for i in path]
+        if as_vertices:
+            point_to_vert = {i.xy: i for i in self.graph.vertex_edges}
+            path = [point_to_vert[i] for i in path]
         return path
 
     def get_river_path(self):
@@ -266,9 +268,93 @@ class RiverGeneration:
 
     def get_river_exterior(self, width):
         river_path = self.get_river_path()
-        river_path = [i.xy for i in river_path]
         river_exterior = self.get_expanded_river_exterior_from_path2(river_path, width)
         return river_exterior
+
+    @staticmethod
+    def get_river_geom_from_path_and_exterior(river_path, river_exterior):
+        river_geom = RiverGeom(river_path, river_exterior)
+        return river_geom
+
+    def get_river_geom(self, exterior_width):
+        river_path = self.get_river_path()
+        river_exterior = self.get_expanded_river_exterior_from_path2(river_path, exterior_width)
+        river_geom = self.get_river_geom_from_path_and_exterior(river_path, river_exterior)
+        return river_geom
+
+
+class ClosingSegmentNotFound(Exception):
+    pass
+
+
+class RiverGeom:
+
+    def __init__(self, river_path, river_exterior):
+        self.path = river_path
+        self.exterior = river_exterior
+        (self.bottom_segment, self.right_bank,
+         self.top_segment, self.left_bank) = self.split_exterior()
+
+    def get_closing_segments(self):
+        first_segment_start, first_segment_end, *_, last_segment_start, last_segment_end = self.path
+        first_segment = first_segment_start, first_segment_end
+        last_segment = last_segment_start, last_segment_end
+        get_min_y = (lambda ln: min(i[1] for i in ln))
+        get_max_y = (lambda ln: max(i[1] for i in ln))
+        closing_exterior_segments = [(float('inf'),
+                                      ((float('inf'), float('inf')),
+                                       (float('inf'), float('inf')))),
+                                     (float('-inf'),
+                                      ((float('-inf'), float('-inf')),
+                                       (float('-inf'), float('-inf'))))]
+        for ind, segment in enumerate(zip(self.exterior, self.exterior[1:])):
+            if is_perpendicular(segment, first_segment):
+                if get_min_y(segment) < get_min_y(closing_exterior_segments[0][1]):
+                    closing_exterior_segments[0] = (ind, segment)
+            if is_perpendicular(segment, last_segment):
+                if get_max_y(segment) > get_max_y(closing_exterior_segments[1][1]):
+                    closing_exterior_segments[1] = (ind, segment)
+        if (closing_exterior_segments[0][0] == float('inf')
+                or closing_exterior_segments[1][0] == float('-inf')):
+            raise ClosingSegmentNotFound
+        return closing_exterior_segments
+
+    def split_exterior(self):
+        ((bottom_segment_ind, bottom_segment),
+         (top_segment_ind, top_segment)) = self.get_closing_segments()
+        left_bank = []
+        left_bank_last = []
+        right_bank = []
+        right_bank_last = []
+        cur_mode = 0 if bottom_segment_ind < top_segment_ind else 1  # 0 - left, 1 - right
+        right_left_append = False
+        left_left_append = False
+        for ind, seg in enumerate(zip(self.exterior, self.exterior[1:])):
+            if cur_mode == 0:
+                if ind == bottom_segment_ind:
+                    cur_mode = 1
+                    left_left_append = True
+                    continue
+                if left_left_append:
+                    left_bank_last.append(seg)
+                else:
+                    left_bank.append(seg)
+            else:
+                if ind == top_segment_ind:
+                    cur_mode = 0
+                    right_left_append = True
+                    continue
+                if right_left_append:
+                    right_bank_last.append(seg)
+                else:
+                    right_bank.append(seg)
+        left_bank = left_bank_last + left_bank
+        left_bank = iter(left_bank)
+        left_bank = list(next(left_bank)) + [i[1] for i in left_bank]
+        right_bank = right_bank_last + right_bank
+        right_bank = iter(right_bank)
+        right_bank = list(next(right_bank)) + [i[1] for i in right_bank]
+        return bottom_segment, right_bank, top_segment, left_bank
 
 
 # lowest_poly_vertices = list(
@@ -330,6 +416,16 @@ def viz_river_generation(voronoi: Voronoi, edges, points, path_points=None):
     viz.show()
 
 
+def test():
+    line1 = (553.7137223974763, 64.40496845425868), (587.873246492986, 64.11548096192385)
+    line2 = ((554, 83), (554, 44))
+    print(is_perpendicular(line1, line2))
+    plt.gca().set_aspect('equal')
+    plt.plot(*zip(*line1), color='green')
+    plt.plot(*zip(*line2), color='red')
+    plt.show()
+
+
 def main():
     rg = RiverGeneration(1000, 100)
     start_edges = rg.get_start_edges()
@@ -339,21 +435,20 @@ def main():
 
     # viz_river_generation(rg.voronoi, start_edges, end_points, res)
 
-    river_path = [i.xy for i in river_path]
-    # river_path = [(553.7137223974763, 64.40496845425868), (587.873246492986, 64.11548096192385),
-    #               (510.1274787535411, 196.28328611898016), (515.7948066610218, 205.83234546994072),
-    #               (480.9682926829268, 300.8137472283814), (464.0598548972189, 307.5386940749698),
-    #               (452.2993931220499, 313.4865138233311), (428.81779067440465, 354.4725835501301),
-    #               (428.1423974255833, 358.31938857602574), (373.6608738828203, 393.45233366434957),
-    #               (359.9140127388535, 397.52547770700636), (325.92243975903614, 431.83772590361446),
-    #               (326.9146341463415, 434.979674796748), (293.05737704918033, 559.1229508196722),
-    #               (286.42814371257487, 566.5808383233533), (314.6855072463768, 633.1033816425121),
-    #               (293.5143947655398, 735.430425299891), (294.07797427652736, 736.5176848874598),
-    #               (145.9178544636159, 806.5570142535634), (137.80255839822024, 817.6779755283649),
-    #               (113.0820170109356, 828.0370595382747), (99.52080257683532, 841.8963226412562),
-    #               (61.98032520325203, 856.7978861788617), (68.42957746478874, 923.0492957746479),
-    #               (11.0, 945.5217391304348), (10.999999999999986, 970.4772727272726),
-    #               (51.38888888888906, 987.0)]
+    river_path = [(824.2087378640776, 53.79126213592233), (853.7946486839243, 146.09930389384382),
+                  (862.2424218251435, 151.46478142948308), (871.1128500823723, 201.29571663920922),
+                  (872.2550241565507, 211.4195322966993), (815.545835618585, 270.6379769646635),
+                  (797.4654210410396, 276.51123265545846), (751.1875, 371.84375),
+                  (760.6363636363636, 414.3636363636364), (737.6612903225806, 437.33870967741933),
+                  (710.5110375275938, 457.5331125827815), (707.8575371549894, 457.80573248407643),
+                  (613.5594683886469, 492.0268058267007), (605.7566071242035, 561.0205264807271),
+                  (563.1470588235294, 567.6323529411765), (531.3928571428571, 647.0178571428571),
+                  (504.0, 638.8), (457.4072657743786, 694.7112810707457),
+                  (467.9822485207101, 707.7455621301775), (447.50699558173784, 798.7466863033874),
+                  (452.320308935671, 843.3792283125855), (340.36961907711367, 874.8174357386188),
+                  (340.34295273943957, 874.836051861146), (328.0153206390895, 962.8905668636463),
+                  (294.2473512632437, 956.4405052974735), (164.58881510686865, 970.5338244449056),
+                  (165.16136919315403, 979.0403422982885), (233.00000000000003, 996.0)]
 
     raw_river_polyline = get_closed_polyline_from_line(river_path, 20)
     print(raw_river_polyline)
@@ -365,16 +460,41 @@ def main():
     poly = geometry.Polygon(river_polyline_repaired)
     print(validation.explain_validity(poly))
 
-    test_polyline = offset_polyline(river_path, 20)
-    poly = geometry.Polygon(test_polyline)
-    print(validation.explain_validity(poly))
-
     plt.gca().set_aspect('equal')
     plt.plot(*zip(*river_path))
     # plt.plot(*poly.buffer(0).exterior.xy, color='red')
     # plt.plot(*zip(*poly_res), color='red')
+
     plt.plot(*zip(*river_polyline_repaired), color='green')
-    plt.plot(*zip(*test_polyline), color='red')
+
+    try:
+        river_exterior2 = offset_polyline(river_path, 20)
+    except AttributeError:
+        print('error attribute')
+        river_exterior2 = None
+    else:
+        poly = geometry.Polygon(river_exterior2)
+        print(validation.explain_validity(poly))
+        plt.plot(*zip(*river_exterior2), color='red')
+
+    try:
+        if river_exterior2 is None:
+            raise ClosingSegmentNotFound
+        river_geom = RiverGeom(river_path, river_exterior2)
+    except ClosingSegmentNotFound:
+        print('error')
+    else:
+        print(river_geom)
+        river_geom_exterior = (list(river_geom.bottom_segment) + river_geom.right_bank + list(
+            river_geom.top_segment) + river_geom.left_bank)
+        poly = geometry.Polygon(river_geom_exterior)
+        print(validation.explain_validity(poly))
+
+        # plt.plot(*zip(*river_geom_exterior), color='red')
+        plt.plot(*zip(*river_geom.left_bank), color='red')
+        plt.plot(*zip(*river_geom.bottom_segment), color='green')
+        plt.plot(*zip(*river_geom.right_bank), color='blue')
+        plt.plot(*zip(*river_geom.top_segment), color='magenta')
     plt.show()
 
 

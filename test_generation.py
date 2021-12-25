@@ -1,5 +1,5 @@
 import timeit
-from main import RiverGeneration
+from river_generation import RiverGeneration, ClosingSegmentNotFound
 from river_generation import viz_river_generation
 from utils import offset_polyline
 
@@ -48,8 +48,24 @@ def test_offsetting_performance():
               f' number of runs - {num_runs}')
 
 
+def test_close_segments_search():
+    while True:
+        rg = RiverGeneration(1000, 100)
+        river_path = rg.get_river_path()
+        try:
+            river_exterior = rg.get_expanded_river_exterior_from_path2(river_path, 20)
+        except AttributeError:
+            print(river_path)
+            return
+        try:
+            rg.get_river_geom_from_path_and_exterior(river_path, river_exterior)
+        except (ClosingSegmentNotFound, ):
+            print(river_path)
+            return
+
+
 def main():
-    test_offsetting_performance()
+    test_close_segments_search()
 
 
 if __name__ == '__main__':
