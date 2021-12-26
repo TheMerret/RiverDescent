@@ -27,14 +27,14 @@ def offset_curve(path, offset_distance, steps=1000):
 def river_smooth_svg():
     rg = RiverGeneration(1000, 100)
     river_path = rg.get_river_path()
-    river_path = [i.xy for i in river_path]
     river_exterior = rg.get_expanded_river_exterior_from_path2(river_path, 20)
+    river_geom = rg.get_river_geom_from_path_and_exterior(river_path, river_exterior, smooth=True)
     res = None
     if len(river_exterior) < 10:
         print(river_path)
         print(river_exterior)
         res = True
-    curved_river_svg = get_curved_svg_from_points(river_exterior)
+    curved_river_svg = get_curved_svg_from_points(river_geom.exterior)
     root = ET.fromstring(curved_river_svg)
     svg_path = root[0].attrib['d']
     svg_path = parse_path(svg_path)

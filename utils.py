@@ -246,7 +246,7 @@ def get_polyline_wo_self_intersection(polyline):
 
 def offset_polyline(polyline, offset):
     polyline = [[Point(*i) for i in polyline]]
-    res = OffsetPolyLines(polyline, offset, jointype=JoinType.Round, endtype=EndType.Butt)[0]
+    res = OffsetPolyLines(polyline, offset, jointype=JoinType.Miter, endtype=EndType.Butt)[0]
     res = [(i.x, i.y) for i in res]
     if res[0] != res[-1]:
         res.append(res[0])
@@ -279,3 +279,47 @@ def is_perpendicular(line, other_line):
     angle = math.degrees(math.acos(cosine_between))
     angle = round(int(angle) + 1, -1)
     return angle == 90
+
+
+def get_q_point(p1, p2, percent):
+    cut_p1 = p1[0] * (1 - percent), p1[1] * (1 - percent)
+    cut_p2 = p2[0] * percent, p2[1] * percent
+    q_point = cut_p1[0] + cut_p2[0], cut_p1[1] + cut_p2[1]
+    return q_point
+
+
+def get_r_point(p1, p2, percent):
+    cut_p1 = p1[0] * percent, p1[1] * percent
+    cut_p2 = p2[0] * (1 - percent), p2[1] * (1 - percent)
+    r_point = cut_p1[0] + cut_p2[0], cut_p1[1] + cut_p2[1]
+    return r_point
+
+
+def chaikin_smooth(points, iter_num=1, percent=0.25, closed=False):
+    iter_num = max(iter_num, 1)
+    percent = max(min(percent, 1), 0)
+
+    smoothed_points = []
+    if not closed:
+        smoothed_points.append(points[0])
+
+    for ind, i in enumerate(points):
+        p1 = i
+        try:
+            p2 = points[ind + 1]
+        except IndexError:
+            if not closed:
+                smoothed_points.append(p1)
+            continue
+        q_point = get_q_point(p1, p2, percent)
+        r_point = get_r_point(p1, p2, percent)
+
+        smoothed_points.append(q_point)
+        smoothed_points.append(r_point)
+
+    if closed:
+        smoothed_points.append(smoothed_points[0])
+
+    if iter_num == 1:
+        return smoothed_points
+    return chaikin_smooth(smoothed_points, iter_num - 1, percent, closed)
