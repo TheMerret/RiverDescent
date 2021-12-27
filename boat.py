@@ -4,6 +4,9 @@ import pygame
 import os
 
 
+size = width, height = 1000, 800
+all_sprites = pygame.sprite.Group()
+
 def load_image(path):
     full_path = os.path.join('data', path)
     if not os.path.exists(full_path):
@@ -13,22 +16,47 @@ def load_image(path):
     return im
 
 
+class Boat(pygame.sprite.Sprite):
+    def __init__(self, boat_image):
+        super(Boat, self).__init__(all_sprites)
+        self.image = boat_image
+        self.rect = self.image.get_rect()
+        self.rect.x = width // 2 - x / 2
+        self.rect.y = height // 2 - y / 2
+        self.angle = 0
+        self.x = width // 2
+        self.y = height // 2
+
+    def move(self, site, multiplier=1):
+        a = math.radians(self.angle)
+        b = math.radians(self.angle)
+        if site == 'up':
+            self.x -= math.sin(a) * speed * multiplier
+            self.y -= math.cos(b) * speed * multiplier
+        if site == 'down':
+            self.x += math.sin(a) * speed * multiplier
+            self.y += math.cos(b) * speed * multiplier
+
+    def rotate(self):
+        boat_temp_image = pygame.transform.rotate(boat_image, self.angle)
+        new_rect = boat_temp_image.get_rect(center=(self.x, self.y))
+        self.image = boat_temp_image
+        self.rect = new_rect
+
+
+
+boat_image = load_image('boat.png')
+x, y = boat_image.get_size()
+speed = 5
+
+
 def boat_run():
     pygame.init()
-    size = width, height = 1000, 800
+    multiplier = 1
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("boat")
     screen.fill('blue')
-    boat_image = load_image('boat.png')
-    x, y = boat_image.get_size()
-    all_sprites = pygame.sprite.Group()
-    boat = pygame.sprite.Sprite()
-    boat.image = boat_image
-    boat.rect = boat_image.get_rect()
-    boat.rect.x = width // 2 - x / 2
-    boat.rect.y = height // 2 - y / 2
-    x = width // 2
-    y = height // 2
+    boat = Boat(boat_image)
     all_sprites.add(boat)
     clock = pygame.time.Clock()
     running = True
@@ -38,39 +66,20 @@ def boat_run():
     allow_down = False
     sliding = False
     direction = ''
-    sliding_counter = 60
-    angle = 0
-    speed = 5
     while running:
-        boat_temp_image = pygame.transform.rotate(boat_image, angle)
-        new_rect = boat_temp_image.get_rect(center=(x, y))
-        boat.image = boat_temp_image
-        boat.rect = new_rect
+        boat.rotate()
         screen.fill('blue')
-        if allow_left and not allow_right:
-            angle += 2
-        if allow_right and not allow_left:
-            angle -= 2
-        if allow_up and not allow_down:
-            a = math.radians(-angle)
-            b = math.radians(-angle)
-            x += math.sin(a) * speed
-            y -= math.cos(b) * speed
-        if allow_down and not allow_up:
-            a = math.radians(-angle)
-            b = math.radians(-angle)
-            x -= math.sin(a) * speed
-            y += math.cos(b) * speed
-        if sliding and sliding_counter > 0:
-            a = math.radians(-angle)
-            b = math.radians(-angle)
-            if direction == 'up':
-                x += math.sin(a) * sliding_counter * 0.05
-                y -= math.cos(b) * sliding_counter * 0.05
-            elif direction == 'down':
-                x -= math.sin(a) * sliding_counter * 0.05
-                y += math.cos(b) * sliding_counter * 0.05
-            sliding_counter -= 1
+        if allow_left:
+            boat.angle += 2
+        if allow_right:
+            boat.angle -= 2
+        if allow_up:
+            boat.move('up')
+        if allow_down:
+            boat.move('down')
+        if sliding and multiplier > 0:
+            boat.move(direction, multiplier)
+            multiplier -= 0.01
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -92,10 +101,10 @@ def boat_run():
                     direction = 'up'
                     sliding = True
                     allow_up = False
-                    sliding_counter = speed * 10
+                    multiplier = 0.5
                 if event.key == pygame.K_DOWN:
                     direction = 'down'
-                    sliding_counter = speed * 10
+                    multiplier = 0.5
                     sliding = True
                     allow_down = False
         all_sprites.draw(screen)
