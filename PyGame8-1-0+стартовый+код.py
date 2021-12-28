@@ -13,7 +13,7 @@ all_sprites = pygame.sprite.Group()
 
 
 def load_image(name, color_key=None):
-    fullname = os.path.join('куст анимация', name)
+    fullname = os.path.join('куст с ягодами анимация', name)
     try:
         image = pygame.image.load(fullname)
     except pygame.error as message:
