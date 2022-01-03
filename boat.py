@@ -6,6 +6,7 @@ import os
 
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
+river_sprites = pygame.sprite.Group()
 
 def load_image(path):
     full_path = os.path.join('data', path)
@@ -26,6 +27,8 @@ class Boat(pygame.sprite.Sprite):
         self.angle = 0
         self.x = width // 2
         self.y = height // 2
+        self.image = self.image.convert_alpha()
+        self.mask = pygame.mask.from_surface(self.image)
 
     def move(self, site, multiplier=1):
         a = math.radians(self.angle)
@@ -44,6 +47,20 @@ class Boat(pygame.sprite.Sprite):
         self.rect = new_rect
 
 
+    def update(self, river):
+        if not pygame.sprite.collide_mask(self, river):
+            exit()
+
+
+class River(pygame.sprite.Sprite):
+    def __init__(self, polygon):
+        super(River, self).__init__(river_sprites)
+        self.image = pygame.Surface([width,height], pygame.SRCALPHA, 32)
+        pygame.draw.polygon(self.image, 'blue', (polygon))
+        self.rect = self.image.get_rect()
+        self.image = self.image.convert_alpha()
+        self.mask = pygame.mask.from_surface(self.image)
+
 
 boat_image = load_image('boat.png')
 x, y = boat_image.get_size()
@@ -55,7 +72,8 @@ def boat_run():
     multiplier = 1
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("boat")
-    screen.fill('blue')
+    screen.fill('orange')
+    river = River([(300, 300), (750, 400), (750, 650), (300, 750)])  # example
     boat = Boat(boat_image)
     all_sprites.add(boat)
     clock = pygame.time.Clock()
@@ -68,7 +86,7 @@ def boat_run():
     direction = ''
     while running:
         boat.rotate()
-        screen.fill('blue')
+        screen.fill('orange')
         if allow_left:
             boat.angle += 2
         if allow_right:
@@ -107,6 +125,8 @@ def boat_run():
                     multiplier = 0.5
                     sliding = True
                     allow_down = False
+        boat.update(river)
+        river_sprites.draw(screen)
         all_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(100)
