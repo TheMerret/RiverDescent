@@ -3,9 +3,9 @@ import sys
 import pygame
 
 pygame.init()
-FPS = 7
+FPS = 20
 
-WIDTH = 600
+WIDTH = 900
 HEIGHT = 900
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
@@ -13,7 +13,7 @@ all_sprites = pygame.sprite.Group()
 
 
 def load_image(name, color_key=None):
-    fullname = os.path.join('ложочка', name)
+    fullname = os.path.join('try', name)
     try:
         image = pygame.image.load(fullname)
     except pygame.error as message:
@@ -40,25 +40,7 @@ class AnimatedSprite(pygame.sprite.Sprite):
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, 600,
                                 900)
-        for i in range(1, 4):
-            frame_location = (0, 0)
-            sheet = load_image(f"{i}.png")
-            sheet = pygame.transform.scale(sheet, (600, 900))
-            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
-
-        for i in range(3, 0, - 1):
-            frame_location = (0, 0)
-            sheet = load_image(f"{i}.png")
-            sheet = pygame.transform.scale(sheet, (600, 900))
-            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
-
-        for i in range(12, 9, -1):
-            frame_location = (0, 0)
-            sheet = load_image(f"{i}.png")
-            sheet = pygame.transform.scale(sheet, (600, 900))
-            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
-
-        for i in range(10, 13):
+        for i in range(1, 36):
             frame_location = (0, 0)
             sheet = load_image(f"{i}.png")
             sheet = pygame.transform.scale(sheet, (600, 900))
@@ -78,7 +60,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    screen.fill(pygame.Color(0, 0, 0))
+    screen.fill(pygame.Color("blue"))
     all_sprites.draw(screen)
     all_sprites.update()
     pygame.display.flip()
