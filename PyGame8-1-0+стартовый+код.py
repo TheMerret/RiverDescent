@@ -12,8 +12,8 @@ clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
 
 
-def load_image(name, color_key=None):
-    fullname = os.path.join('try', name)
+def load_image(name, color_key=None, way_to_file="try\\left"):
+    fullname = os.path.join(way_to_file, name)
     try:
         image = pygame.image.load(fullname)
     except pygame.error as message:
@@ -40,9 +40,34 @@ class AnimatedSprite(pygame.sprite.Sprite):
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, 600,
                                 900)
-        for i in range(1, 36):
+        for i in range(10, 36):
             frame_location = (0, 0)
             sheet = load_image(f"{i}.png")
+            sheet = pygame.transform.scale(sheet, (600, 900))
+            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+        for i in range(1, 10):
+            frame_location = (0, 0)
+            sheet = load_image(f"{i}.png")
+            sheet = pygame.transform.scale(sheet, (600, 900))
+            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+        for i in range(1, 18):
+            frame_location = (0, 0)
+            sheet = load_image(f"{i}.png", way_to_file="try\\change")
+            sheet = pygame.transform.scale(sheet, (600, 900))
+            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+        for i in range(10, 36):
+            frame_location = (0, 0)
+            sheet = load_image(f"{i}.png", way_to_file="try\\right")
+            sheet = pygame.transform.scale(sheet, (600, 900))
+            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+        for i in range(1, 10):
+            frame_location = (0, 0)
+            sheet = load_image(f"{i}.png", way_to_file="try\\right")
+            sheet = pygame.transform.scale(sheet, (600, 900))
+            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+        for i in range(17, 0, -1):
+            frame_location = (0, 0)
+            sheet = load_image(f"{i}.png", way_to_file="try\\change")
             sheet = pygame.transform.scale(sheet, (600, 900))
             self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
 
