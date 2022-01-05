@@ -4,7 +4,7 @@ import foronoi
 
 from utils import (is_perpendicular, chaikin_smooth, get_bisect,
                    get_closed_polyline_from_line, offset_polyline,
-                   get_polyline_wo_self_intersection, get_path_bisects)
+                   get_polyline_wo_self_intersection, get_path_bisects, clip_lines_by_polygon)
 from river_generation import RiverGeneration, ClosingSegmentNotFound, RiverGeom
 
 
@@ -109,6 +109,22 @@ def test_path_bisects():
     plt.show()
 
 
+def test_path_bisects_clipped():
+    import matplotlib.pyplot as plt
+    rg = RiverGeneration(1000, 100)
+    river_geom = rg.get_river_geom(20, True)
+    print(river_geom.path)
+    perpendiculars = get_path_bisects(river_geom.path, river_geom.width * 2)
+    clipped_perpendiculars = clip_lines_by_polygon(river_geom.exterior, perpendiculars)
+    plt.gca().set_aspect('equal')
+    plt.plot(*zip(*river_geom.path), color='green')
+    for perp in clipped_perpendiculars:
+        plt.plot(*zip(*perp), color='red')
+    exterior = river_geom.exterior
+    plt.plot(*zip(*exterior))
+    plt.show()
+
+
 def main():
     from shapely import geometry, validation
     import matplotlib.pyplot as plt
@@ -186,4 +202,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test_path_bisects()
+    test_path_bisects_clipped()

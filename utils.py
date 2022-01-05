@@ -1,5 +1,6 @@
 import math
-from clipper.clipper import OffsetPolyLines, Point, JoinType, EndType
+from clipper.clipper import (OffsetPolyLines, Point, JoinType, EndType, Clipper, PolyType,
+                             ClipType, PolyFillType)
 
 
 def catmull_rom2bezier_svg(points, close=False):
@@ -358,3 +359,15 @@ def get_path_bisects(path, bisect_width):
         bisect = left_half[::-1][0], right_half[1]
         bisects.append(bisect)
     return bisects
+
+
+def clip_lines_by_polygon(polygon, lines):
+    res = []
+    c = Clipper()
+    polygon = [Point(x, y) for x, y in polygon]
+    c.AddPolygon(polygon, PolyType.Clip)
+    for line in lines:
+        line = [Point(x, y) for x, y in line]
+        c.AddPolygon(line, PolyType.Subject)
+    c.Execute(ClipType.Intersection, res, PolyFillType.Positive, PolyFillType.Positive)
+    return res
