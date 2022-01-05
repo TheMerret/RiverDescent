@@ -83,14 +83,18 @@ def save_smooth_svg_from_points(points, save_path, color='red', closed=False):
     with open(save_path, 'w') as f:
         f.write(svg)
 
+def get_vector_normal(vector):
+    i, j = vector
+    magnitude = (i ** 2 + j ** 2) ** .5
+    normal = (i / magnitude, j / magnitude) if magnitude > 0 else vector
+    return normal
+
 
 def offset_straight_line(start_pos, end_pos, offset):
     origin_line = start_pos, end_pos
-    vector = complex(*end_pos) - complex(*start_pos)
-    i, j = vector.real, vector.imag
-    magnitude = (i ** 2 + j ** 2) ** .5
-    normal = complex(i / magnitude, j / magnitude) if magnitude > 0 else vector
-    clockwise_normal = complex(-normal.imag, normal.real)
+    vector = vector_from_points(start_pos, end_pos)
+    normal = get_vector_normal(vector)
+    clockwise_normal = complex(-normal[1], normal[0])
     offset_vector = clockwise_normal * offset
     res_line = [(x + offset_vector.real, y + offset_vector.imag) for x, y in origin_line]
     return res_line
@@ -333,16 +337,13 @@ def chaikin_smooth(points, iter_num=1, percent=0.25, closed=False):
 def get_bisect(line1, line2, bisect_length):
     # if line1[1] != line2[0]:
     #     raise ValueError('Lines must be connected')
-    angle = get_angle_between_lines(line1[::-1], line2)
-    if vector_from_points(*line1[::-1])[1] < 0:
-        angle_from_start = -get_angle_between_lines(line1[::-1], ((0, 0), (1, 0)))
-    else:
-        angle_from_start = get_angle_between_lines(line2, ((0, 0), (1, 0)))
-    angle = angle / 2 + angle_from_start
-    angle = math.radians(angle)
-    bisect = (1, 1)
-    bisect = bisect[0] * math.cos(angle), bisect[1] * math.sin(angle)
-    bisect = bisect[0] * bisect_length, bisect[1] * bisect_length
+    vec1 = vector_from_points(*line1[::-1])
+    vec_norm1 = get_vector_normal(vec1)
+    vec2 = vector_from_points(*line2)
+    vec_norm2 = get_vector_normal(vec2)
+    vec_sum = vec_norm1[0] + vec_norm2[0], vec_norm1[1] + vec_norm2[1]
+    normal = get_vector_normal(vec_sum)
+    bisect = normal[0] * bisect_length, normal[1] * bisect_length
     bisect = (line1[1],
               (line1[1][0] + bisect[0], line1[1][1] + bisect[1]))
     return bisect

@@ -82,10 +82,10 @@ def test_smooth():
 
 def test_bisect():
     import matplotlib.pyplot as plt
-    # line1 = (478.1512445887446, 45.900432900432904), (414.21762558665046, 132.9589779245611)
-    # line2 = (414.21762558665046, 132.9589779245611), (435.42974107243225, 166.38927193015326)
-    line1 = (0, 1), (0, 0)
-    line2 = (0, 0), (3 ** .5 / 2, 0.5)
+    line1 = (478.1512445887446, 45.900432900432904), (414.21762558665046, 132.9589779245611)
+    line2 = (414.21762558665046, 132.9589779245611), (435.42974107243225, 166.38927193015326)
+    # line1 = (0, -1), (0, 0)
+    # line2 = (0, 0), (-1, 0)
     plt.gca().set_aspect('equal')
     plt.plot(*zip(*line1), color='green')
     plt.plot(*zip(*line2), color='red')
@@ -94,17 +94,17 @@ def test_bisect():
     plt.show()
 
 
-def test_perpendiculars():
+def test_path_bisects():
     import matplotlib.pyplot as plt
     rg = RiverGeneration(1000, 100)
-    path = rg.get_river_path()
-    print(path)
-    perpendiculars = get_path_bisects(path, 20*2)
+    river_geom = rg.get_river_geom(20, True)
+    print(river_geom.path)
+    perpendiculars = get_path_bisects(river_geom.path, river_geom.width * 2)
     plt.gca().set_aspect('equal')
-    plt.plot(*zip(*path), color='green')
+    plt.plot(*zip(*river_geom.path), color='green')
     for perp in perpendiculars:
         plt.plot(*zip(*perp), color='red')
-    exterior = rg.get_expanded_river_exterior_from_path(path, 20)
+    exterior = river_geom.exterior
     plt.plot(*zip(*exterior))
     plt.show()
 
@@ -186,4 +186,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test_perpendiculars()
+    test_path_bisects()
