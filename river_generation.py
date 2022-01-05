@@ -5,27 +5,9 @@ import random
 
 import foronoi
 import numpy as np
-from foronoi import Voronoi, Polygon, Visualizer, Point, VoronoiObserver
-from foronoi.visualization.visualizer import Colors
-from foronoi.graph import HalfEdge, Vertex
 
-from utils import get_closed_polyline_from_line, get_polyline_wo_self_intersection, offset_polyline, \
-    is_perpendicular, chaikin_smooth
-
-
-def path_vertex(vertex: Vertex):
-    def __gt__(self, other):
-        return self.xy > other.xy
-
-    def __lt__(self, other):
-        return self.xy < other.xy
-
-    def __eq__(self, other):
-        return self.xy == other.xy
-
-    vertex.__gt__ = __gt__
-    vertex.__eq__ = __eq__
-    vertex.__lt__ = __lt__
+from utils import (get_closed_polyline_from_line, get_polyline_wo_self_intersection, offset_polyline,
+                   is_perpendicular, chaikin_smooth, vector_length, vector_from_points)
 
 
 class PriorityQueue:
@@ -44,7 +26,7 @@ class PriorityQueue:
 
 class Graph:
 
-    def __init__(self, edges: Dict[Vertex, List[Vertex]]):
+    def __init__(self, edges: Dict[foronoi.graph.Vertex, List[foronoi.graph.Vertex]]):
         self.vertex_edges = edges
         self.edges = {k.xy: [i.xy for i in v] for k, v in self.vertex_edges.items()}
         self.weights = {k: {i: self._distance(k, i) for i in v} for k, v in self.edges.items()}
@@ -70,7 +52,7 @@ class RiverGeneration:
         x_min, y_min, x_max, y_max = (self.points[:, 0].min(), self.points[:, 1].min(),
                                       self.points[:, 0].max(), self.points[:, 1].max())
         self.bounding_poly = [(x_min, y_min), (x_min, y_max), (x_max, y_max), (x_max, y_min)]
-        self.bounding_poly = Polygon(self.bounding_poly)
+        self.bounding_poly = foronoi.Polygon(self.bounding_poly)
         self.voronoi = foronoi.Voronoi(self.bounding_poly)
         self.voronoi.create_diagram(self.points)  # TODO: Lloyd iteration
         self.graph = self.get_graph()
@@ -106,7 +88,7 @@ class RiverGeneration:
         x, y = round(p[0], precision), round(p[1], precision)
         return a * x + b * y == c
 
-    def get_points_on_lines(self, points: Set[Vertex], line_eqs_coefficients):
+    def get_points_on_lines(self, points: Set[foronoi.graph.Vertex], line_eqs_coefficients):
         points_on_lines = set()
         for i in points:
             if any(self.is_point_on_line(i.xy, a, b, c) for a, b, c in line_eqs_coefficients):
@@ -114,7 +96,7 @@ class RiverGeneration:
 
         return points_on_lines
 
-    def get_start_edges_from_points(self, points: Set[Vertex]):
+    def get_start_edges_from_points(self, points: Set[foronoi.graph.Vertex]):
         """Находим ребря не лежащие на ограничивающем полигоне"""
         extended_vertices = {j for i in points for j in i.connected_edges}
         start_edges = set()
@@ -293,15 +275,17 @@ class RiverGeom:
         (self.bottom_segment, self.right_bank,
          self.top_segment, self.left_bank) = self.split_exterior()
         self.origin_exterior = (list(self.bottom_segment)
-                                + self.right_bank
+                                + self.right_bank[:]
                                 + list(self.top_segment)
-                                + self.left_bank)
+                                + self.left_bank[:])
         if smooth:
             self.smooth_banks()
         self.exterior = (list(self.bottom_segment)
                          + self.right_bank
                          + list(self.top_segment)
                          + self.left_bank)
+
+        self.width = vector_length(vector_from_points(*self.bottom_segment))  # or self.top_segment
 
     def get_closing_segments(self):
         first_segment_start, first_segment_end, *_, last_segment_start, last_segment_end = self.path
@@ -364,177 +348,9 @@ class RiverGeom:
         right_bank = list(next(right_bank)) + [i[1] for i in right_bank]
         return list(bottom_segment), right_bank, list(top_segment), left_bank
 
-    def smooth_banks(self):
-        self.right_bank = chaikin_smooth(self.right_bank, 5)
-        self.left_bank = chaikin_smooth(self.left_bank, 5)
+    def smooth_banks(self, k=5):
+        self.right_bank = chaikin_smooth(self.right_bank, k)
+        self.left_bank = chaikin_smooth(self.left_bank, k)
 
 
-# lowest_poly_vertices = list(
-#     next(groupby(sorted(rg.bounding_poly.points, key=lambda p: p.y),
-#                  key=lambda x: x.y))[1])
-# poly_points = lowest_poly_vertices + [lowest_poly_vertices[0]]
-# polygon_lines = [(poly_points[i - 1], poly_points[i])
-#                  for i in range(1, len(poly_points))]
-# polygon_lines_eqs_coefficients = [rg.line_eq_from_points(p1.xy, p2.xy)
-#                                   for p1, p2 in polygon_lines]
-# all_p = {j for i in rg.voronoi.edges for j in (i.origin, i.twin.origin)}
-# bad_point = sorted(all_p, key=lambda p: p.xy)[24]
-
-
-def plot_vertices(self, vertices=None, **kwargs):
-    vertices = vertices or self.voronoi.vertices
-
-    xs = [vertex.xd for vertex in vertices]
-    ys = [vertex.yd for vertex in vertices]
-    if (clr := kwargs.get('color')) is None:
-        color = Colors.VERTICES
-    else:
-        color = clr
-        kwargs.pop('color')
-
-    # Scatter points
-    self.canvas.scatter(xs, ys, s=50, color=color, zorder=10, **kwargs)
-
-    return self
-
-
-def plot_vertices_in_line(vertices):
-    import matplotlib.pyplot as plt
-    x, y = zip(*[i.xy for i in vertices])
-    plt.gca().set_aspect('equal')
-    plt.plot(x, y)
-    plt.show()
-
-
-# line = geometry.LineString([i.xy for i in res])
-# poly = geometry.Polygon(polygon_from_line([i.xy for i in res], 20))
-#
-# plt.gca().set_aspect('equal')
-# plt.plot(*line.buffer(10).exterior.xy)
-# plt.show()
-
-# plot_vertices_in_line(res)
-
-def viz_river_generation(voronoi: Voronoi, edges, points, path_points=None):
-    Visualizer.plot_vertices = plot_vertices
-
-    viz = Visualizer(voronoi) \
-        .plot_sites(show_labels=False) \
-        .plot_edges(show_labels=False) \
-        .plot_edges(edges, show_labels=False, color='red') \
-        .plot_vertices() \
-        .plot_vertices(points, color='red')
-    if path_points:
-        viz = viz.plot_vertices(path_points, color='green')
-    viz.show()
-
-
-def test_perpendicular():
-    import matplotlib.pyplot as plt
-    line1 = (553.7137223974763, 64.40496845425868), (587.873246492986, 64.11548096192385)
-    line2 = ((554, 83), (554, 44))
-    print(is_perpendicular(line1, line2))
-    plt.gca().set_aspect('equal')
-    plt.plot(*zip(*line1), color='green')
-    plt.plot(*zip(*line2), color='red')
-    plt.show()
-
-
-def test_smooth():
-    import matplotlib.pyplot as plt
-    line = [(824.2087378640776, 53.79126213592233), (853.7946486839243, 146.09930389384382),
-            (862.2424218251435, 151.46478142948308), (871.1128500823723, 201.29571663920922),
-            (872.2550241565507, 211.4195322966993), (815.545835618585, 270.6379769646635),
-            (797.4654210410396, 276.51123265545846), (751.1875, 371.84375),
-            (760.6363636363636, 414.3636363636364), (737.6612903225806, 437.33870967741933),
-            (710.5110375275938, 457.5331125827815), (707.8575371549894, 457.80573248407643),
-            (613.5594683886469, 492.0268058267007), (605.7566071242035, 561.0205264807271),
-            (563.1470588235294, 567.6323529411765), (531.3928571428571, 647.0178571428571),
-            (504.0, 638.8), (457.4072657743786, 694.7112810707457),
-            (467.9822485207101, 707.7455621301775), (447.50699558173784, 798.7466863033874),
-            (452.320308935671, 843.3792283125855), (340.36961907711367, 874.8174357386188),
-            (340.34295273943957, 874.836051861146), (328.0153206390895, 962.8905668636463),
-            (294.2473512632437, 956.4405052974735), (164.58881510686865, 970.5338244449056),
-            (165.16136919315403, 979.0403422982885), (233.00000000000003, 996.0)]
-    res = chaikin_smooth(line, 5, closed=False)
-    plt.gca().set_aspect('equal')
-    # plt.plot(*zip(*line), color='green')
-    plt.plot(*zip(*res), color='red')
-    plt.show()
-
-
-def main():
-    from shapely import geometry, validation
-    import matplotlib.pyplot as plt
-
-    rg = RiverGeneration(1000, 100)
-    start_edges = rg.get_start_edges()
-    end_points = rg.get_end_points()
-    start, end = rg.get_start_and_end_from_variants((start_edges, end_points))
-    river_path = rg.get_path_from_start_and_end(start, end)
-
-    # viz_river_generation(rg.voronoi, start_edges, end_points, river_path)
-
-    # river_path = [(824.2087378640776, 53.79126213592233), (853.7946486839243, 146.09930389384382),
-    #               (862.2424218251435, 151.46478142948308), (871.1128500823723, 201.29571663920922),
-    #               (872.2550241565507, 211.4195322966993), (815.545835618585, 270.6379769646635),
-    #               (797.4654210410396, 276.51123265545846), (751.1875, 371.84375),
-    #               (760.6363636363636, 414.3636363636364), (737.6612903225806, 437.33870967741933),
-    #               (710.5110375275938, 457.5331125827815), (707.8575371549894, 457.80573248407643),
-    #               (613.5594683886469, 492.0268058267007), (605.7566071242035, 561.0205264807271),
-    #               (563.1470588235294, 567.6323529411765), (531.3928571428571, 647.0178571428571),
-    #               (504.0, 638.8), (457.4072657743786, 694.7112810707457),
-    #               (467.9822485207101, 707.7455621301775), (447.50699558173784, 798.7466863033874),
-    #               (452.320308935671, 843.3792283125855), (340.36961907711367, 874.8174357386188),
-    #               (340.34295273943957, 874.836051861146), (328.0153206390895, 962.8905668636463),
-    #               (294.2473512632437, 956.4405052974735), (164.58881510686865, 970.5338244449056),
-    #               (165.16136919315403, 979.0403422982885), (233.00000000000003, 996.0)]
-
-    raw_river_polyline = get_closed_polyline_from_line(river_path, 20)
-    print(raw_river_polyline)
-    river_polyline_repaired = get_polyline_wo_self_intersection(raw_river_polyline)
-    # river_polyline_repaired = [(650.0050442508174, 102.08098053052966),
-    #                            (652.1867584772918, 108.35340893164364),
-    #                            (652.9105374339, 101.070374206),
-    #                            (650.0050442508174, 102.08098053052966)]
-    poly = geometry.Polygon(river_polyline_repaired)
-    print(validation.explain_validity(poly))
-
-    plt.gca().set_aspect('equal')
-    plt.plot(*zip(*river_path))
-    # plt.plot(*poly.buffer(0).exterior.xy, color='red')
-    # plt.plot(*zip(*poly_res), color='red')
-
-    # plt.plot(*zip(*river_polyline_repaired), color='green')
-
-    try:
-        river_exterior2 = offset_polyline(river_path, 20)
-    except AttributeError:
-        print('error attribute')
-        river_exterior2 = None
-    else:
-        poly = geometry.Polygon(river_exterior2)
-        print(validation.explain_validity(poly))
-        plt.plot(*zip(*river_exterior2), color='green')
-
-    try:
-        if river_exterior2 is None:
-            raise ClosingSegmentNotFound
-        river_geom = RiverGeom(river_path, river_exterior2, smooth=True)
-    except ClosingSegmentNotFound:
-        print('error')
-    else:
-        print(river_geom)
-        poly = geometry.Polygon(river_geom.exterior)
-        print(validation.explain_validity(poly))
-
-        plt.plot(*zip(*river_geom.exterior), color='red')
-        # plt.plot(*zip(*river_geom.left_bank), color='red')
-        # plt.plot(*zip(*river_geom.bottom_segment), color='green')
-        # plt.plot(*zip(*river_geom.right_bank), color='blue')
-        # plt.plot(*zip(*river_geom.top_segment), color='magenta')
-    plt.show()
-
-
-if __name__ == '__main__':
-    main()
+__all__ = [RiverGeneration, RiverGeom]

@@ -270,13 +270,18 @@ def vector_length(vector):
     return length
 
 
-def is_perpendicular(line, other_line):
+def get_angle_between_lines(line, other_line):
     vector1 = vector_from_points(*line)
     vector2 = vector_from_points(*other_line)
     dot = dot_product(vector1, vector2)
     cosine_between = dot / (vector_length(vector1) * vector_length(vector2))
     cosine_between = round(cosine_between, 14)
     angle = math.degrees(math.acos(cosine_between))
+    return angle
+
+
+def is_perpendicular(line, other_line):
+    angle = get_angle_between_lines(line, other_line)
     angle = round(int(angle) + 1, -1)
     return angle == 90
 
@@ -323,3 +328,17 @@ def chaikin_smooth(points, iter_num=1, percent=0.25, closed=False):
     if iter_num == 1:
         return smoothed_points
     return chaikin_smooth(smoothed_points, iter_num - 1, percent, closed)
+
+
+def get_bisect(line1, line2, bisect_length):
+    if line1[1] != line2[0]:
+        raise ValueError('Lines must be connected')
+    angle = get_angle_between_lines(line1, line2)
+    angle = angle / 2
+    angle = math.radians(angle)
+    bisect = (1, 1)
+    bisect = bisect[0] * math.cos(angle), bisect[1] * math.sin(angle)
+    bisect = bisect[0] * bisect_length, bisect[1] * bisect_length
+    bisect = (line1[1],
+              (line1[1][0] + bisect[0], line1[1][1] + bisect[1]))
+    return bisect
