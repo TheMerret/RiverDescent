@@ -4,13 +4,12 @@ import foronoi
 
 from utils import (is_perpendicular, chaikin_smooth, get_bisect,
                    get_closed_polyline_from_line, offset_polyline,
-                   get_polyline_wo_self_intersection)
+                   get_polyline_wo_self_intersection, get_path_bisects)
 from river_generation import RiverGeneration, ClosingSegmentNotFound, RiverGeom
 
 
 def plot_vertices(self, vertices=None, **kwargs):
     vertices = vertices or self.voronoi.vertices
-
     xs = [vertex.xd for vertex in vertices]
     ys = [vertex.yd for vertex in vertices]
     if (clr := kwargs.get('color')) is None:
@@ -83,13 +82,30 @@ def test_smooth():
 
 def test_bisect():
     import matplotlib.pyplot as plt
-    line1 = (370.0832546006841, 100.45889030941743), (317.49618206629873, 167.5766013072514)
-    line2 = (317.49618206629873, 167.5766013072514), (316.2397901488098, 190.44775216640403)
+    # line1 = (478.1512445887446, 45.900432900432904), (414.21762558665046, 132.9589779245611)
+    # line2 = (414.21762558665046, 132.9589779245611), (435.42974107243225, 166.38927193015326)
+    line1 = (0, 1), (0, 0)
+    line2 = (0, 0), (3 ** .5 / 2, 0.5)
     plt.gca().set_aspect('equal')
     plt.plot(*zip(*line1), color='green')
     plt.plot(*zip(*line2), color='red')
-    test_line = get_bisect(line1, line2, 100)
+    test_line = get_bisect(line1, line2, 2 ** .5)
     plt.plot(*zip(*test_line))
+    plt.show()
+
+
+def test_perpendiculars():
+    import matplotlib.pyplot as plt
+    rg = RiverGeneration(1000, 100)
+    path = rg.get_river_path()
+    print(path)
+    perpendiculars = get_path_bisects(path, 20*2)
+    plt.gca().set_aspect('equal')
+    plt.plot(*zip(*path), color='green')
+    for perp in perpendiculars:
+        plt.plot(*zip(*perp), color='red')
+    exterior = rg.get_expanded_river_exterior_from_path(path, 20)
+    plt.plot(*zip(*exterior))
     plt.show()
 
 
@@ -170,4 +186,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test_bisect()
+    test_perpendiculars()

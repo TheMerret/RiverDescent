@@ -331,10 +331,14 @@ def chaikin_smooth(points, iter_num=1, percent=0.25, closed=False):
 
 
 def get_bisect(line1, line2, bisect_length):
-    if line1[1] != line2[0]:
-        raise ValueError('Lines must be connected')
-    angle = get_angle_between_lines(line1, line2)
-    angle = angle / 2
+    # if line1[1] != line2[0]:
+    #     raise ValueError('Lines must be connected')
+    angle = get_angle_between_lines(line1[::-1], line2)
+    if vector_from_points(*line1[::-1])[1] < 0:
+        angle_from_start = -get_angle_between_lines(line1[::-1], ((0, 0), (1, 0)))
+    else:
+        angle_from_start = get_angle_between_lines(line2, ((0, 0), (1, 0)))
+    angle = angle / 2 + angle_from_start
     angle = math.radians(angle)
     bisect = (1, 1)
     bisect = bisect[0] * math.cos(angle), bisect[1] * math.sin(angle)
@@ -342,3 +346,14 @@ def get_bisect(line1, line2, bisect_length):
     bisect = (line1[1],
               (line1[1][0] + bisect[0], line1[1][1] + bisect[1]))
     return bisect
+
+
+def get_path_bisects(path, bisect_width):
+    bisects = []
+    lines = [line for line in zip(path, path[1:])]
+    for line1, line2 in zip(lines, lines[1:]):
+        right_half = get_bisect(line1, line2, bisect_width / 2)
+        left_half = get_bisect(line1, line2, -bisect_width / 2)
+        bisect = left_half[::-1][0], right_half[1]
+        bisects.append(bisect)
+    return bisects
