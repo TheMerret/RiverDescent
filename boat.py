@@ -37,8 +37,10 @@ class Boat(pygame.sprite.Sprite):
         self.rect = new_rect
 
 
-    def update(self, river):
+    def update(self, river, beach1, beach2):
         if not pygame.sprite.collide_mask(self, river):
+            exit()
+        if pygame.sprite.collide_mask(self, beach1) or pygame.sprite.collide_mask(self, beach2):
             exit()
 
 
@@ -61,6 +63,15 @@ class River(pygame.sprite.Sprite):
             self.rect.x += math.sin(a) * speed * multiplier
             self.rect.y += math.cos(b) * speed * multiplier
 
+class Beach(River):
+    def __init__(self, polygon):
+        super(River, self).__init__(river_sprites)
+        self.image = pygame.Surface([5000, 5000], pygame.SRCALPHA, 32)
+        pygame.draw.polygon(self.image, 'orange', (polygon))
+        self.rect = self.image.get_rect()
+        self.image = self.image.convert_alpha()
+        self.mask = pygame.mask.from_surface(self.image)
+
 
 boat_image = load_image('boat.png')
 x, y = boat_image.get_size()
@@ -74,6 +85,8 @@ def boat_run():
     pygame.display.set_caption("boat")
     screen.fill('orange')
     river = River([(465, 188), (864, 224), (837, 527), (974, 718), (1267, 688), (1807, 1372), (1988, 1391), (2056, 1461), (2072, 1488), (2147, 1578), (2153, 2504), (2202, 2586), (2159, 2891), (2136, 2984), (2432, 3246), (2456, 3367), (2449, 3402), (2567, 3612), (2869, 3852), (2878, 4077), (3404, 4104), (3598, 4605), (3531, 5016), (3136, 4952), (3185, 4648), (3125, 4490), (2493, 4458), (2477, 4051), (2257, 3877), (2029, 3470), (2037, 3431), (1690, 3123), (1765, 2816), (1786, 2668), (1724, 2563), (1754, 2507), (1749, 1768), (1597, 1752), (1089, 1108), (784, 1139), (425, 638), (465, 188)])  # example
+    beach1 = Beach()
+    beach2 = Beach()
     boat = Boat(boat_image)
     all_sprites.add(boat)
     clock = pygame.time.Clock()
