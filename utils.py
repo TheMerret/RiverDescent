@@ -384,3 +384,22 @@ def clip_lines_by_polygon(polygon, lines):
                     for x, y in res_line_scaled]
         res.append(res_line)
     return res
+
+
+def shorten_line_on_ends_from_center(line, one_side_delta):
+    p1, p2 = line
+    center = (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
+    left_half_vec = vector_from_points(center, p1)
+    left_norm = get_vector_normal(left_half_vec)
+    left_shortener_vec = left_norm[0] * one_side_delta, left_norm[1] * one_side_delta
+    left_half_vec = (left_half_vec[0] - left_shortener_vec[0],
+                     left_half_vec[1] - left_shortener_vec[1])
+    left_half = [(center[0] + left_half_vec[0], center[1] + left_half_vec[1]), center]
+    right_half_vec = vector_from_points(center, p2)
+    right_norm = get_vector_normal(right_half_vec)
+    right_shortener_vec = right_norm[0] * one_side_delta, right_norm[1] * one_side_delta
+    right_half_vec = (right_half_vec[0] - right_shortener_vec[0],
+                      right_half_vec[1] - right_shortener_vec[1])
+    right_half = [center, (center[0] + right_half_vec[0], center[1] + right_half_vec[1])]
+    short_line = [left_half[0], right_half[1]]
+    return short_line
