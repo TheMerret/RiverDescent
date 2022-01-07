@@ -1,3 +1,4 @@
 foronoi
 shapely
 svgpathtools
+pyclipper

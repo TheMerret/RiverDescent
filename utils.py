@@ -1,6 +1,7 @@
 import math
 from clipper.clipper import (OffsetPolyLines, Point, JoinType, EndType, Clipper, PolyType,
                              ClipType, PolyFillType)
+import pyclipper
 
 
 def catmull_rom2bezier_svg(points, close=False):
@@ -83,6 +84,7 @@ def save_smooth_svg_from_points(points, save_path, color='red', closed=False):
     svg = get_curved_svg_from_points(points, color=color, closed=closed)
     with open(save_path, 'w') as f:
         f.write(svg)
+
 
 def get_vector_normal(vector):
     i, j = vector
@@ -249,12 +251,26 @@ def get_polyline_wo_self_intersection(polyline):
     return res[::-1]
 
 
-def offset_polyline(polyline, offset):
+def offset_polyline_old(polyline, offset):
     polyline = [[Point(*i) for i in polyline]]
     res = OffsetPolyLines(polyline, offset, jointype=JoinType.Miter, endtype=EndType.Butt)[0]
     res = [(i.x, i.y) for i in res]
     if res[0] != res[-1]:
         res.append(res[0])
+    return res
+
+
+def offset_polyline(polyline, offset):
+    polyline_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
+                       for x, y in polyline]
+    pco = pyclipper.PyclipperOffset()
+    pco.AddPath(polyline_scaled, pyclipper.JT_MITER, pyclipper.ET_OPENBUTT)
+    offset_scaled = pyclipper.scale_to_clipper(offset)
+    res_scaled = pco.Execute(offset_scaled)[0]
+    if res_scaled[0] != res_scaled[-1]:
+        res_scaled.append(res_scaled[0])
+    res = [(pyclipper.scale_from_clipper(x), pyclipper.scale_from_clipper(y))
+           for x, y in res_scaled]
     return res
 
 
@@ -362,12 +378,16 @@ def get_path_bisects(path, bisect_width):
 
 
 def clip_lines_by_polygon(polygon, lines):
+    pc = pyclipper.Pyclipper()
+    polygon_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
+                      for x, y in polygon]
+    pc.AddPath(polygon_scaled, pyclipper.PT_CLIP, closed=True)
     res = []
-    c = Clipper()
-    polygon = [Point(x, y) for x, y in polygon]
-    c.AddPolygon(polygon, PolyType.Clip)
     for line in lines:
-        line = [Point(x, y) for x, y in line]
-        c.AddPolygon(line, PolyType.Subject)
-    c.Execute(ClipType.Intersection, res, PolyFillType.Positive, PolyFillType.Positive)
+        line_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
+                       for x, y in line]
+        pc.AddPath(line_scaled, pyclipper.PT_SUBJECT, closed=False)
+        res_line = pc.Execute(pyclipper.CT_INTERSECTION,
+                              pyclipper.PFT_NONZERO, pyclipper.PFT_NONZERO)
+        res.append(res_line)
     return res
