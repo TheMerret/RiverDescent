@@ -5,6 +5,7 @@ from utils import (is_perpendicular, chaikin_smooth, get_bisect,
                    get_polyline_wo_self_intersection, get_path_bisects,
                    clip_lines_by_polygon, shorten_line_on_ends_from_center)
 from river_generation import RiverGeneration, ClosingSegmentNotFound, RiverGeom
+from obstacles_generation import ObstaclesGeneration
 
 
 def plot_vertices(self, vertices=None, **kwargs):
@@ -175,6 +176,21 @@ def test_short_lines_for_obstacles():
     plt.show()
 
 
+def test_bisect_allocation():
+    import matplotlib.pyplot as plt
+    rg = RiverGeneration(1000, 100)
+    river_geom = rg.get_river_geom(20, True)
+    plt.gca().set_aspect('equal')
+    plt.plot(*zip(*river_geom.path), color='green')
+    og = ObstaclesGeneration(river_geom)
+    control_lines = og.control_lines
+    for line in control_lines:
+        plt.plot(*zip(*line), color='red')
+    exterior = river_geom.exterior
+    plt.plot(*zip(*exterior))
+    plt.show()
+
+
 def main():
     from shapely import geometry, validation
     import matplotlib.pyplot as plt
@@ -252,4 +268,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test_short_lines_for_obstacles()
+    test_bisect_allocation()
