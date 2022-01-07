@@ -112,7 +112,8 @@ def test_path_bisects_clipped():
     rg = RiverGeneration(1000, 100)
     river_geom = rg.get_river_geom(20, True)
     print(river_geom.path)
-    perpendiculars = get_path_bisects(river_geom.path, river_geom.width * 2)
+    expand_coefficient = 3
+    perpendiculars = get_path_bisects(river_geom.path, river_geom.width * expand_coefficient)
     clipped_perpendiculars = clip_lines_by_polygon(river_geom.exterior, perpendiculars)
     plt.gca().set_aspect('equal')
     plt.plot(*zip(*river_geom.path), color='green')
@@ -229,4 +230,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test_path_bisects()
+    test_path_bisects_clipped()

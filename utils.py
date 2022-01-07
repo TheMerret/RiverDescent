@@ -1,6 +1,4 @@
 import math
-from clipper.clipper import (OffsetPolyLines, Point, JoinType, EndType, Clipper, PolyType,
-                             ClipType, PolyFillType)
 import pyclipper
 
 
@@ -251,15 +249,6 @@ def get_polyline_wo_self_intersection(polyline):
     return res[::-1]
 
 
-def offset_polyline_old(polyline, offset):
-    polyline = [[Point(*i) for i in polyline]]
-    res = OffsetPolyLines(polyline, offset, jointype=JoinType.Miter, endtype=EndType.Butt)[0]
-    res = [(i.x, i.y) for i in res]
-    if res[0] != res[-1]:
-        res.append(res[0])
-    return res
-
-
 def offset_polyline(polyline, offset):
     polyline_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
                        for x, y in polyline]
@@ -382,12 +371,16 @@ def clip_lines_by_polygon(polygon, lines):
     polygon_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
                       for x, y in polygon]
     pc.AddPath(polygon_scaled, pyclipper.PT_CLIP, closed=True)
-    res = []
     for line in lines:
         line_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
                        for x, y in line]
         pc.AddPath(line_scaled, pyclipper.PT_SUBJECT, closed=False)
-        res_line = pc.Execute(pyclipper.CT_INTERSECTION,
-                              pyclipper.PFT_NONZERO, pyclipper.PFT_NONZERO)
+    res_scaled = pc.Execute2(pyclipper.CT_INTERSECTION,
+                             pyclipper.PFT_EVENODD, pyclipper.PFT_EVENODD)
+    res = []
+    for child in res_scaled.Childs:
+        res_line_scaled = child.Contour
+        res_line = [(pyclipper.scale_from_clipper(x), pyclipper.scale_from_clipper(y))
+                    for x, y in res_line_scaled]
         res.append(res_line)
     return res
