@@ -222,7 +222,7 @@ class GreenSpace:
 
 
 class Stoun(pygame.sprite.Sprite):
-    image = load_image(f"stounversion1small.png", way_to_file="other_pictures")
+    image = load_image(f"хатка5.1.png", way_to_file="other_pictures")
 
     def __init__(self, x, y, a):
         super().__init__(all_sprites)
@@ -243,7 +243,7 @@ green = GreenSpace(water)
 make_kamushi(water.points)
 brevno = Brevno1(400, 400, 75, 150)
 brevno2 = Brevno2(290, 400, 75, 150)
-stoun = Stoun(290, 300, 75)
+stoun = Stoun(290, 300, 150)
 
 # Главный Игровой цикл
 running = True
