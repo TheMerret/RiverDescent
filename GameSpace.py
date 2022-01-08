@@ -43,7 +43,52 @@ def make_kamushi(*args, s=20):
             KAMUSHI(int(p1[0] - j * (dx / (ras / s)) - s), int(p1[1] - j * (dy / (ras / s)) - 3 * s), 3 * s, 4.5 * s)
 
 
+class Brevno2(pygame.sprite.Sprite):
+    def __init__(self, x, y, w, h):
+        super().__init__(all_sprites)
+        self.x, self.y, self.w, self.h = x, y, w, h
+        self.frames = []
+        self.cur_frame = 0
+        self.cut_sheet()
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(x, y)
+
+    def cut_sheet(self):
+        self.rect = pygame.Rect((0, 0), (self.w, self.h))
+        frame_location = (0, 0)
+        sheet = load_image(f"бревно 2.png", way_to_file="other_pictures")
+        sheet = pygame.transform.scale(sheet, (self.w, self.h))
+        self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+
+    def update(self):
+        pass
+
+
+class Brevno1(pygame.sprite.Sprite):
+    def __init__(self, x, y, w, h):
+        super().__init__(all_sprites)
+        self.x, self.y, self.w, self.h = x, y, w, h
+        self.frames = []
+        self.cur_frame = 0
+        self.cut_sheet()
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(x, y)
+
+    def cut_sheet(self):
+        self.rect = pygame.Rect((0, 0), (self.w, self.h))
+        frame_location = (0, 0)
+        sheet = load_image(f"бревно1.png", way_to_file="other_pictures")
+        sheet = pygame.transform.scale(sheet, (self.w, self.h))
+        self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+
+    def update(self):
+        pass
+
+
 class KAMUSHI(pygame.sprite.Sprite):
+    frames = []
+    flag = 1
+
     def __init__(self, x, y, w, h, creat=True):
         super().__init__(bivers)
         self.x, self.y, self.w, self.h = x, y, w, h
@@ -56,17 +101,21 @@ class KAMUSHI(pygame.sprite.Sprite):
         self.rect = self.rect.move(x, y)
 
     def load_animation(self):
+        if KAMUSHI.flag:
+            self.rect = pygame.Rect((0, 0), (self.w, self.h))
+            for i in range(16):
+                frame_location = (0, 0)
+                sheet = load_image(f"{i}.png", way_to_file="камышы")
+                sheet = pygame.transform.scale(sheet, (self.w, self.h))
+                KAMUSHI.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+            for i in range(15, 0, -1):
+                frame_location = (0, 0)
+                sheet = load_image(f"{i}.png", way_to_file="камышы")
+                sheet = pygame.transform.scale(sheet, (self.w, self.h))
+                KAMUSHI.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+            KAMUSHI.flag = 0
+        self.frames = KAMUSHI.frames
         self.rect = pygame.Rect((0, 0), (self.w, self.h))
-        for i in range(16):
-            frame_location = (0, 0)
-            sheet = load_image(f"{i}.png", way_to_file="камышы")
-            sheet = pygame.transform.scale(sheet, (self.w, self.h))
-            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
-        for i in range(15, 0, -1):
-            frame_location = (0, 0)
-            sheet = load_image(f"{i}.png", way_to_file="камышы")
-            sheet = pygame.transform.scale(sheet, (self.w, self.h))
-            self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
 
     def update(self):
         pass
@@ -172,10 +221,29 @@ class GreenSpace:
         pygame.draw.polygon(screen, pygame.Color("green"), self.points)
 
 
+class Stoun(pygame.sprite.Sprite):
+    image = load_image(f"stounversion1small.png", way_to_file="other_pictures")
+
+    def __init__(self, x, y, a):
+        super().__init__(all_sprites)
+        self.x, self.y, self.w, self.h = x, y, a, a
+        self.image = Stoun.image
+        self.image = pygame.transform.scale(self.image, (self.w, self.h))
+        self.rect = pygame.Rect((0, 0), (self.w, self.h))
+        self.rect = self.rect.move(x, y)
+        self.image = self.image.subsurface(pygame.Rect((0, 0), self.rect.size))
+
+    def update(self):
+        pass
+
+
 water = WATER((200, 0), (100, 450), (200, 900), (700, 900), (600, 450),  (700, 0))
 boat = BOAT(400, 600, 100, 200)
 green = GreenSpace(water)
 make_kamushi(water.points)
+brevno = Brevno1(400, 400, 75, 150)
+brevno2 = Brevno2(290, 400, 75, 150)
+stoun = Stoun(290, 300, 75)
 
 # Главный Игровой цикл
 running = True
