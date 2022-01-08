@@ -1,7 +1,9 @@
 from itertools import chain, islice
 
 from river_generation import RiverGeom
-from utils import get_path_bisects, clip_lines_by_polygon, chaikin_smooth, is_intersects
+from utils import (get_path_bisects, clip_lines_by_polygon,
+                   chaikin_smooth, is_intersects, clip_lines_to_fit_rect_by_polygon,
+                   get_distance_between_points)
 
 OBSTACLE_SIZE = (5, 5)
 BOAT_SIZE = (10, 30)  # FIXME: с маленькими размерами Pyclipper выдает ошибку
@@ -19,9 +21,7 @@ class ObstaclesGeneration:
 
     def get_river_bisects(self):
         expand_coefficient = 3  # для уверрности, что линии пересекают берега
-        bisect_count_coefficient = 5  # можно увеличить количество конторольных линий, сгладив
-        # линию реки
-        river_path = chaikin_smooth(self.river_geometry.path, bisect_count_coefficient)
+        river_path = chaikin_smooth(self.river_geometry.path, CONTROL_LINES_COEFFICIENT)
         raw_bisects = get_path_bisects(river_path,
                                        self.river_geometry.width * expand_coefficient)
         clipped_bisects = clip_lines_by_polygon(self.river_geometry.exterior, raw_bisects)
@@ -34,7 +34,9 @@ class ObstaclesGeneration:
         for cur_ind, current_line in enumerate(chain((start_segment,), lines)):
             if cur_ind not in valid_indexes:
                 continue
-            yield current_line
+            # самый верх реки не нужен как контрольная линия
+            if cur_ind != 0:
+                yield current_line
             for other_ind, next_line in enumerate(islice(chain((start_segment,), lines),
                                                          cur_ind + 1, None, 1), cur_ind + 1):
                 distance = self.get_min_distance_between_segments(current_line, next_line)
@@ -44,8 +46,6 @@ class ObstaclesGeneration:
 
     @staticmethod
     def get_min_distance_between_segments(line, other_line):
-        get_distance_between_points = (lambda p1, p2: ((p2[0] - p1[0]) ** 2
-                                                       + (p2[1] - p1[1]) ** 2) ** .5)
         min_distance_between_segments = min((get_distance_between_points(p1, p2)
                                              for p1 in line for p2 in other_line))
         return min_distance_between_segments
@@ -60,3 +60,9 @@ class ObstaclesGeneration:
                                                   last_control_line) > min_buff:
             control_lines.append(last_control_line)
         return control_lines
+
+    def get_rectangular_control_lines(self):
+        res = clip_lines_to_fit_rect_by_polygon(self.river_geometry.exterior,
+                                                self.control_lines,
+                                                (BOAT_SIZE[0] * 2, BOAT_SIZE[1]))
+        return res

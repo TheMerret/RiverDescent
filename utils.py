@@ -1,4 +1,5 @@
 import math
+from itertools import chain, islice, combinations
 import pyclipper
 
 
@@ -311,7 +312,9 @@ def get_r_point(p1, p2, percent):
 
 
 def chaikin_smooth(points, iter_num=1, percent=0.25, closed=False):
-    iter_num = max(iter_num, 1)
+    iter_num = max(iter_num, 0)
+    if iter_num == 0:
+        return points
     percent = max(min(percent, 1), 0)
 
     smoothed_points = []
@@ -366,40 +369,99 @@ def get_path_bisects(path, bisect_width):
     return bisects
 
 
-def clip_lines_by_polygon(polygon, lines):
+def clip_geom_by_polygon(polygon, geom_list, geom_closed):
     pc = pyclipper.Pyclipper()
     polygon_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
                       for x, y in polygon]
     pc.AddPath(polygon_scaled, pyclipper.PT_CLIP, closed=True)
-    for line in lines:
-        line_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
-                       for x, y in line]
-        pc.AddPath(line_scaled, pyclipper.PT_SUBJECT, closed=False)
+    for geom in geom_list:
+        geom_scaled = [(pyclipper.scale_to_clipper(x), pyclipper.scale_to_clipper(y))
+                       for x, y in geom]
+        if len(set(geom_scaled)) != len(geom_scaled):  # совпадающие точки
+            continue
+        pc.AddPath(geom_scaled, pyclipper.PT_SUBJECT, closed=geom_closed)
     res_scaled = pc.Execute2(pyclipper.CT_INTERSECTION,
                              pyclipper.PFT_EVENODD, pyclipper.PFT_EVENODD)
     res = []
     for child in res_scaled.Childs:
-        res_line_scaled = child.Contour
-        res_line = [(pyclipper.scale_from_clipper(x), pyclipper.scale_from_clipper(y))
-                    for x, y in res_line_scaled]
-        res.append(res_line)
+        res_geom_scaled = child.Contour
+        res_geom = [(pyclipper.scale_from_clipper(x), pyclipper.scale_from_clipper(y))
+                    for x, y in res_geom_scaled]
+        res.append(res_geom)
     return res
 
 
-def shorten_line_on_ends_from_center(line, one_side_delta):
+def clip_lines_by_polygon(polygon, lines):
+    res = clip_geom_by_polygon(polygon, lines, geom_closed=False)
+    return res
+
+
+def get_mean_of_two_points(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    mean = (x1 + x2) / 2, (y1 + y2) / 2
+    return mean
+
+
+def get_center_line_of_two(line1, line2):
+    p1, q1 = line1
+    p2, q2 = line2
+    center_line = get_mean_of_two_points(p1, q1), get_mean_of_two_points(p2, q2)
+    return center_line
+
+
+def get_distance_between_points(p1, p2):
+    return ((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2) ** .5
+
+
+def clip_lines_to_fit_rect_by_polygon(polygon, lines, rect_size):
+    """Обрезаем линии по полигону, но так чтобы прямоугольник влезал"""
+    rect_width, rect_height = rect_size
+    fitted_lines = []
+    for origin_line in lines:
+        expanded_line = offset_polyline(origin_line, rect_height)
+        # Строим 4 линии для прямоугольников
+        expanded_lines = zip(expanded_line, expanded_line[1:])
+        # Берем только параллельные линии
+        expanded_lines = (line for line in expanded_lines if not is_perpendicular(line, origin_line))
+        # Удленяем, чтоб наверняка пересекал реку
+        expanded_lines = [resize_line_on_ends_from_center(line, rect_width * 3)
+                          for line in expanded_lines]
+        clipped_lines = clip_geom_by_polygon(polygon, expanded_lines, geom_closed=False)
+        # варианты соедений
+        try:
+            line_connecting_variants = ((p1, p2)
+                                        for p1 in clipped_lines[0]
+                                        for p2 in clipped_lines[1])
+        except IndexError:
+            print((polygon, expanded_lines, clipped_lines))
+            continue
+        line_pairs_variants = combinations(line_connecting_variants, 2)
+        # линии которое не пересекаютс есть перпендикуляры к данным
+        perpendicular_line_pair = next(iter((pair for pair in line_pairs_variants
+                                             if not is_intersects(*pair[0], *pair[1]))))
+        center_line = get_center_line_of_two(*perpendicular_line_pair)
+        fitted_lines.append(center_line)
+
+    res_clipped_lines = clip_lines_by_polygon(polygon, fitted_lines)
+    # res = [line for line in res_clipped_lines if get_distance_between_points(*line) > rect_width]
+    return res_clipped_lines
+
+
+def resize_line_on_ends_from_center(line, one_side_offset):
     p1, p2 = line
     center = (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
     left_half_vec = vector_from_points(center, p1)
     left_norm = get_vector_normal(left_half_vec)
-    left_shortener_vec = left_norm[0] * one_side_delta, left_norm[1] * one_side_delta
-    left_half_vec = (left_half_vec[0] - left_shortener_vec[0],
-                     left_half_vec[1] - left_shortener_vec[1])
+    left_shortener_vec = left_norm[0] * one_side_offset, left_norm[1] * one_side_offset
+    left_half_vec = (left_half_vec[0] + left_shortener_vec[0],
+                     left_half_vec[1] + left_shortener_vec[1])
     left_half = [(center[0] + left_half_vec[0], center[1] + left_half_vec[1]), center]
     right_half_vec = vector_from_points(center, p2)
     right_norm = get_vector_normal(right_half_vec)
-    right_shortener_vec = right_norm[0] * one_side_delta, right_norm[1] * one_side_delta
-    right_half_vec = (right_half_vec[0] - right_shortener_vec[0],
-                      right_half_vec[1] - right_shortener_vec[1])
+    right_shortener_vec = right_norm[0] * one_side_offset, right_norm[1] * one_side_offset
+    right_half_vec = (right_half_vec[0] + right_shortener_vec[0],
+                      right_half_vec[1] + right_shortener_vec[1])
     right_half = [center, (center[0] + right_half_vec[0], center[1] + right_half_vec[1])]
     short_line = [left_half[0], right_half[1]]
     return short_line

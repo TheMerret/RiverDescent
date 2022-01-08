@@ -3,7 +3,7 @@ import foronoi
 from utils import (is_perpendicular, chaikin_smooth, get_bisect,
                    get_closed_polyline_from_line, offset_polyline,
                    get_polyline_wo_self_intersection, get_path_bisects,
-                   clip_lines_by_polygon, shorten_line_on_ends_from_center)
+                   clip_lines_by_polygon, resize_line_on_ends_from_center)
 from river_generation import RiverGeneration, ClosingSegmentNotFound, RiverGeom
 from obstacles_generation import ObstaclesGeneration
 
@@ -165,7 +165,7 @@ def test_short_lines_for_obstacles():
     clipped_perpendiculars = clip_lines_by_polygon(river_geom.exterior, perpendiculars)
     obstacle_width, obstacle_height = 5, 5
     shorten_delta = (obstacle_width ** 2 + obstacle_height ** 2) ** .5
-    shorten_perpendiculars = [shorten_line_on_ends_from_center(i, shorten_delta)
+    shorten_perpendiculars = [resize_line_on_ends_from_center(i, -shorten_delta)
                               for i in clipped_perpendiculars]
     plt.gca().set_aspect('equal')
     plt.plot(*zip(*river_geom.path), color='green')
@@ -183,11 +183,13 @@ def test_bisect_allocation():
     plt.gca().set_aspect('equal')
     plt.plot(*zip(*river_geom.path), color='green')
     og = ObstaclesGeneration(river_geom)
-    control_lines = og.control_lines
-    for line in control_lines:
-        plt.plot(*zip(*line), color='red')
+    control_lines = og.get_rectangular_control_lines()
     exterior = river_geom.exterior
     plt.plot(*zip(*exterior))
+    for line in og.control_lines:
+        plt.plot(*zip(*line), color='red')
+    for line in control_lines:
+        plt.plot(*zip(*line), color='orange')
     plt.show()
 
 
