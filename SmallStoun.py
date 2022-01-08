@@ -29,7 +29,7 @@ def load_image(name, color_key=None, way_to_file="try\\left"):
 
 
 class Stoun(pygame.sprite.Sprite):
-    image = load_image(f"stounversion1small.png", way_to_file="other_pictures")
+    image = load_image(f"BigStoun.png", way_to_file="other_pictures")
 
     def __init__(self, x, y, a):
         super().__init__(all_sprites)
@@ -44,7 +44,7 @@ class Stoun(pygame.sprite.Sprite):
         pass
 
 
-stoun = Stoun(290, 300, 75)
+stoun = Stoun(290, 300, 150)
 
 
 running = True
