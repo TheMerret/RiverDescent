@@ -3,7 +3,8 @@ from itertools import chain, islice
 from river_generation import RiverGeom
 from utils import (get_path_bisects, clip_lines_by_polygon,
                    chaikin_smooth, is_intersects, clip_lines_to_fit_rect_by_polygon,
-                   get_distance_between_points)
+                   get_distance_between_points, get_vector_normal, vector_from_points,
+                   offset_polyline)
 
 OBSTACLE_SIZE = (5, 5)
 BOAT_SIZE = (10, 30)  # FIXME: с маленькими размерами Pyclipper выдает ошибку
@@ -66,3 +67,29 @@ class ObstaclesGeneration:
                                                 self.control_lines,
                                                 (BOAT_SIZE[0] * 2, BOAT_SIZE[1]))
         return res
+
+    def get_obstacles_boxes(self):
+        obstacles_boxes = []
+        for control_line in self.control_lines:
+            cur_obstacle_boxes = self.get_obstacle_boxes_on_line(control_line)
+            obstacles_boxes.append(cur_obstacle_boxes)
+        return obstacles_boxes
+
+    @staticmethod
+    def get_obstacle_boxes_on_line(line):
+        line_length = get_distance_between_points(*line)
+        obstacle_count = int(line_length // OBSTACLE_SIZE[0])
+        delta = line_length / obstacle_count
+        line_normal = get_vector_normal(vector_from_points(*line))
+        obstacle_center_lines = []
+        base_point = line[0]
+        for _ in range(obstacle_count):
+            obstacle_vector = line_normal[0] * OBSTACLE_SIZE[0], line_normal[1] * OBSTACLE_SIZE[1]
+            obstacle_segment = (base_point, (base_point[0] + obstacle_vector[0],
+                                             base_point[1] + obstacle_vector[1]))
+            obstacle_center_lines.append(obstacle_segment)
+            delta_vector = line_normal[0] * delta, line_normal[1] * delta
+            base_point = (base_point[0] + delta_vector[0], base_point[1] + delta_vector[1])
+        obstacle_boxes = [offset_polyline(line, OBSTACLE_SIZE[1] / 2)
+                          for line in obstacle_center_lines]
+        return obstacle_boxes

@@ -193,6 +193,23 @@ def test_bisect_allocation():
     plt.show()
 
 
+def test_obstacle_boxes():
+    import matplotlib.pyplot as plt
+    rg = RiverGeneration(1000, 100)
+    river_geom = rg.get_river_geom(20, True)
+    plt.gca().set_aspect('equal')
+    og = ObstaclesGeneration(river_geom)
+    exterior = river_geom.exterior
+    plt.plot(*zip(*exterior))
+    for line in og.control_lines:
+        plt.plot(*zip(*line), color='orange')
+    obstacle_boxes_groups = og.get_obstacles_boxes()
+    for group in obstacle_boxes_groups:
+        for box in group:
+            plt.plot(*zip(*box), color='red')
+    plt.show()
+
+
 def main():
     from shapely import geometry, validation
     import matplotlib.pyplot as plt
@@ -270,4 +287,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test_bisect_allocation()
+    test_obstacle_boxes()
