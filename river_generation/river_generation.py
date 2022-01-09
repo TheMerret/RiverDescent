@@ -6,9 +6,9 @@ import random
 import foronoi
 import numpy as np
 
-from utils import (get_closed_polyline_from_line, get_polyline_wo_self_intersection,
-                   offset_polyline, is_perpendicular,
-                   chaikin_smooth, vector_length, vector_from_points)
+from river_generation.utils import (get_closed_polyline_from_line, get_polyline_wo_self_intersection,
+                                    offset_polyline, is_perpendicular,
+                                    chaikin_smooth, vector_length, vector_from_points)
 
 
 class PriorityQueue:

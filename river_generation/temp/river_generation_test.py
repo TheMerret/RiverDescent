@@ -1,11 +1,11 @@
 import foronoi
 
-from utils import (is_perpendicular, chaikin_smooth, get_bisect,
-                   get_closed_polyline_from_line, offset_polyline,
-                   get_polyline_wo_self_intersection, get_path_bisects,
-                   clip_lines_by_polygon, resize_line_on_ends_from_center)
-from river_generation import RiverGeneration, ClosingSegmentNotFound, RiverGeom
-from obstacles_generation import ObstaclesGeneration
+from river_generation.obstacles_generation import ObstaclesGeneration
+from river_generation.river_generation import RiverGeneration, ClosingSegmentNotFound, RiverGeom
+from river_generation.utils import (is_perpendicular, chaikin_smooth, get_bisect,
+                                    get_closed_polyline_from_line, offset_polyline,
+                                    get_polyline_wo_self_intersection, get_path_bisects,
+                                    clip_lines_by_polygon, resize_line_on_ends_from_center)
 
 
 def plot_vertices(self, vertices=None, **kwargs):

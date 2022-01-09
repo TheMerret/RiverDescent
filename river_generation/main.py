@@ -1,4 +1,4 @@
-from river_generation import RiverGeneration
+from river_generation.river_generation import RiverGeneration
 
 
 def get_river_path():
