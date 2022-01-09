@@ -203,10 +203,10 @@ def test_obstacle_boxes():
     plt.plot(*zip(*exterior))
     for line in og.control_lines:
         plt.plot(*zip(*line), color='orange')
-    obstacle_boxes_groups = og.get_obstacles_boxes()
+    obstacle_boxes_groups = og.get_obstacle_groups()
     for group in obstacle_boxes_groups:
-        for box in group:
-            plt.plot(*zip(*box), color='red')
+        for box in group.obstacles:
+            plt.plot(*zip(*box.normalized_rect), color='red')
     plt.show()
 
 

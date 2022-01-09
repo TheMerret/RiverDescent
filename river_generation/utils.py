@@ -477,3 +477,23 @@ def get_rectangles_on_line(rectangles, line):
         if len(intersecting_lines) > 1:
             res.append(rect)
     return res
+
+
+def rotate_polygon(polygon, theta, center_point=(0, 0)):
+    """Rotates the given polygon which consists of corners represented as (x,y),
+    around the center point, clock-wise, theta is degrees"""
+    rotated_polygon = []
+    for corner in polygon:
+        rotated_polygon.append(rotate_point(center_point, corner, theta))
+    return rotated_polygon
+
+
+def rotate_point(center_point, point, angle):
+    """Rotates a point around another centerPoint. Angle is in degrees.
+    Rotation is counter-clockwise"""
+    angle = math.radians(angle)
+    temp_point = point[0] - center_point[0], point[1] - center_point[1]
+    temp_point = (temp_point[0] * math.cos(angle) - temp_point[1] * math.sin(angle),
+                  temp_point[0] * math.sin(angle) + temp_point[1] * math.cos(angle))
+    temp_point = temp_point[0] + center_point[0], temp_point[1] + center_point[1]
+    return temp_point

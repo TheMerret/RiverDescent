@@ -1,12 +1,14 @@
 from itertools import chain, islice
 from random import choice
+from typing import List
 
 from river_generation.river_generation import RiverGeom
 from river_generation.utils import (get_path_bisects, clip_lines_by_polygon,
                                     chaikin_smooth, is_intersects, clip_lines_to_fit_rect_by_polygon,
                                     get_distance_between_points, get_vector_normal,
-                                    vector_from_points,
-                                    offset_polyline, get_rectangles_on_line)
+                                    vector_from_points, get_angle_between_lines,
+                                    offset_polyline, get_rectangles_on_line, get_center_line_of_two,
+                                    rotate_polygon, get_mean_of_two_points)
 
 OBSTACLE_SIZE = (5, 5)
 BOAT_SIZE = (17, 30)  # FIXME: с маленькими размерами Pyclipper выдает ошибку
@@ -21,7 +23,6 @@ class ObstaclesGeneration:
     def __init__(self, river_geometry: RiverGeom):
         self.river_geometry = river_geometry
         self.control_lines = self.get_control_lines()
-        self.obstacle_boxes = self.get_obstacles_boxes()
 
     def get_river_bisects(self):
         expand_coefficient = 3  # для уверрности, что линии пересекают берега
@@ -72,13 +73,15 @@ class ObstaclesGeneration:
                                                 (BOAT_SIZE[0] * 2, BOAT_SIZE[1]))
         return res
 
-    def get_obstacles_boxes(self):
+    def get_obstacle_groups(self):
         res = []
         obstacles_boxes = (self.get_obstacle_boxes_on_line(control_line)
                            for control_line in self.control_lines)
         for (obstacles_boxes_on_line,
-             shorten_control_line) in zip(obstacles_boxes,
-                                          self.get_rectangular_control_lines()):
+             shorten_control_line,
+             control_line) in zip(obstacles_boxes,
+                                  self.get_rectangular_control_lines(),
+                                  self.control_lines):
             shorten_obstacles = get_rectangles_on_line(obstacles_boxes_on_line,
                                                        shorten_control_line)
             obstacles_wo_boat = self.get_obstacles_with_rect_buffer(
@@ -86,7 +89,17 @@ class ObstaclesGeneration:
                 obstacles_boxes_on_line,
                 (BOAT_SIZE[0] * 1.5, BOAT_SIZE[1])
             )
-            res.append(obstacles_wo_boat)
+            obstacle_group = ObstacleGroup([ObstacleGeom(i) for i in obstacles_wo_boat],
+                                           control_line)
+            res.append(obstacle_group)
+        return res
+
+    def get_obstacles_boxes(self):
+        obstacle_groups = self.get_obstacle_groups()
+        res = []
+        for group in obstacle_groups:
+            for obstacle in group.obstacles:
+                res.append(obstacle.original_rect)
         return res
 
     @staticmethod
@@ -130,3 +143,27 @@ class ObstaclesGeneration:
                 continue
             res.append(box)
         return res
+
+
+class ObstacleGeom:
+
+    def __init__(self, obstacle_coordinates):
+        if len(obstacle_coordinates) != 4 + 1 or obstacle_coordinates[0] != obstacle_coordinates[-1]:
+            raise ValueError('obstacle coordinates should represent rectangle')
+        self.original_rect = obstacle_coordinates
+        parallel_lines = ((self.original_rect[0], self.original_rect[1]),
+                          (self.original_rect[2], self.original_rect[3]))
+        self.center_line = get_center_line_of_two(*parallel_lines)
+        self.rotate_degree = get_angle_between_lines(self.center_line, ((0, 0), (1, 0)))
+        self.center = get_mean_of_two_points(*self.center_line)
+        self.normalized_rect = rotate_polygon(self.original_rect, self.rotate_degree, self.center)
+        width = get_distance_between_points(self.normalized_rect[0], self.normalized_rect[1])
+        height = get_distance_between_points(self.normalized_rect[1], self.normalized_rect[2])
+        self.size = width, height
+
+
+class ObstacleGroup:
+
+    def __init__(self, obstacles: List[ObstacleGeom], control_line):
+        self.obstacles = obstacles
+        self.control_line = control_line

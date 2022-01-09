@@ -27,8 +27,18 @@ def get_river_obstacles():
     rg = RiverGeneration(1000, 100)
     river_geom = rg.get_river_geom(20, smooth=True)
     og = ObstaclesGeneration(river_geom)
-    obstacle_groups = og.get_obstacles_boxes()  # группа есть линия последовательных препятствий
-    obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle in obstacle_group]
+    # группа есть линия последовательных препятствий на одной линии
+    obstacle_groups = og.get_obstacle_groups()
+    obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
+                 in obstacle_group.obstacles]
+    # obstacle = obstacles[0]
+    # obstacle.original_rect - прямоугольник препятствия
+    # obstacle.center - центр прямоугольника препятсвия
+    # obstacle.rotate_degree - угол на который нужно повернуть изначальный прямоугольник,
+    # чтобы получился прямой
+    # obstacle.normalized_rect - прямоугольник развернутый прямо
+    # obstacle.size - размер прямоугольника
+    # (равен river_generation.obstacles_generation.OBSTACLE_SIZE (5x5))
     return obstacles
 
 
