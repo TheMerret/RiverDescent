@@ -1,10 +1,11 @@
 from itertools import chain, islice
 
-from river_generation import RiverGeom
-from utils import (get_path_bisects, clip_lines_by_polygon,
-                   chaikin_smooth, is_intersects, clip_lines_to_fit_rect_by_polygon,
-                   get_distance_between_points, get_vector_normal, vector_from_points,
-                   offset_polyline)
+from river_generation.river_generation import RiverGeom
+from river_generation.utils import (get_path_bisects, clip_lines_by_polygon,
+                                    chaikin_smooth, is_intersects, clip_lines_to_fit_rect_by_polygon,
+                                    get_distance_between_points, get_vector_normal,
+                                    vector_from_points,
+                                    offset_polyline)
 
 OBSTACLE_SIZE = (5, 5)
 BOAT_SIZE = (10, 30)  # FIXME: с маленькими размерами Pyclipper выдает ошибку

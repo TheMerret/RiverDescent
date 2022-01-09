@@ -1,7 +1,7 @@
 import timeit
-from river_generation import RiverGeneration, ClosingSegmentNotFound
+from river_generation.river_generation import RiverGeneration, ClosingSegmentNotFound
 from river_generation.temp.river_generation_test import viz_river_generation
-from utils import offset_polyline
+from river_generation.utils import offset_polyline
 
 
 def test_river_path_generation():

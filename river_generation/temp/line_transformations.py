@@ -1,8 +1,8 @@
 import xml.etree.ElementTree as ET
 from svgpathtools import parse_path, Line, Path, wsvg, smoothed_path
-from river_generation import RiverGeneration
-from utils import get_curved_svg_from_points
-from main import get_river_exterior
+from river_generation.river_generation import RiverGeneration
+from river_generation.utils import get_curved_svg_from_points
+# from river_generation.main import get_river_exterior
 
 
 def offset_curve(path, offset_distance, steps=1000):
