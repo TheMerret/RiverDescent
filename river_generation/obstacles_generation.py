@@ -9,7 +9,7 @@ from river_generation.utils import (get_path_bisects, clip_lines_by_polygon,
                                     offset_polyline, get_rectangles_on_line)
 
 OBSTACLE_SIZE = (5, 5)
-BOAT_SIZE = (10, 30)  # FIXME: с маленькими размерами Pyclipper выдает ошибку
+BOAT_SIZE = (17, 30)  # FIXME: с маленькими размерами Pyclipper выдает ошибку
 MIN_BUFF_COEFFICIENT = 1.5  # минимальное расстояние между препятствиями, относительно длины лодки
 min_buff = BOAT_SIZE[1] * MIN_BUFF_COEFFICIENT
 # Это коефициент сглаживания.
@@ -21,6 +21,7 @@ class ObstaclesGeneration:
     def __init__(self, river_geometry: RiverGeom):
         self.river_geometry = river_geometry
         self.control_lines = self.get_control_lines()
+        self.obstacle_boxes = self.get_obstacles_boxes()
 
     def get_river_bisects(self):
         expand_coefficient = 3  # для уверрности, что линии пересекают берега
@@ -76,18 +77,27 @@ class ObstaclesGeneration:
         obstacles_boxes = (self.get_obstacle_boxes_on_line(control_line)
                            for control_line in self.control_lines)
         for (obstacles_boxes_on_line,
-             shorten_control_line) in zip(self.get_rectangular_control_lines(),
-                                          obstacles_boxes):
+             shorten_control_line) in zip(obstacles_boxes,
+                                          self.get_rectangular_control_lines()):
             shorten_obstacles = get_rectangles_on_line(obstacles_boxes_on_line,
                                                        shorten_control_line)
-            obstacles_wo_boat = self.get_obstacles_with_rect_buffer(shorten_obstacles)
+            obstacles_wo_boat = self.get_obstacles_with_rect_buffer(
+                shorten_obstacles,
+                obstacles_boxes_on_line,
+                (BOAT_SIZE[0] * 1.5, BOAT_SIZE[1])
+            )
+            res.append(obstacles_wo_boat)
         return res
 
     @staticmethod
     def get_obstacle_boxes_on_line(line):
         line_length = get_distance_between_points(*line)
         obstacle_count = int(line_length // OBSTACLE_SIZE[0])
-        delta = line_length / obstacle_count
+        try:
+            delta = line_length / obstacle_count
+        except ZeroDivisionError:
+            # FIXME: странно что он не насчитал препятствий
+            return []
         line_normal = get_vector_normal(vector_from_points(*line))
         obstacle_center_lines = []
         base_point = line[0]
@@ -102,7 +112,21 @@ class ObstaclesGeneration:
                           for line in obstacle_center_lines]
         return obstacle_boxes
 
-    def get_obstacles_with_rect_buffer(self, obstacle_boxes):
+    @staticmethod
+    def get_obstacles_with_rect_buffer(shorten_obstacle_boxes, original_obstacle_boxes, rect_size):
         """Расчищаем препятсвия так, чтобы лодка влезала"""
-        box_count_for_rect = BOAT_SIZE[0] // OBSTACLE_SIZE[0] + 1
-        star_ind, start_box = choice(list(enumerate(obstacle_boxes[:-(box_count_for_rect - 1)])))
+        box_count_for_rect = int(rect_size[0] // OBSTACLE_SIZE[0]) + 1
+        try:
+            start_ind, start_box = choice(
+                list(enumerate(shorten_obstacle_boxes[:-(box_count_for_rect - 1)]))
+            )
+        except IndexError:
+            # print(shorten_obstacle_boxes)
+            return []
+        buffer_boxes = shorten_obstacle_boxes[start_ind:start_ind + box_count_for_rect]
+        res = []
+        for box in original_obstacle_boxes:
+            if box in buffer_boxes:
+                continue
+            res.append(box)
+        return res
