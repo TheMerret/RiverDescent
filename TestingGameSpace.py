@@ -3,7 +3,7 @@ import sys
 import pygame
 
 pygame.init()
-FPS = 20
+FPS = 40
 
 WIDTH = 900
 HEIGHT = 900
