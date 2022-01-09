@@ -8,7 +8,7 @@ from river_generation.main import RiverGeneration
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
-river_size = 11000
+river_size = 5000
 river_width = 300
 river_curvature = 10000
 
@@ -99,6 +99,8 @@ def boat_run():
     rg = RiverGeneration(river_size, 100)
     river_geom = rg.get_river_geom(river_width, smooth=True)
     a = (river_geom.left_bank, river_geom.right_bank)
+    print(a[0])
+    print(a[1])
     # import matplotlib.pyplot as plt
     # plt.gca().set_aspect('equal')
     # plt.plot(*zip(*river_geom.path), color='green')
@@ -119,21 +121,32 @@ def boat_run():
     running = True
     allow_right = False
     allow_left = False
-    allow_up = False
-    allow_down = False
-    cnt = 100
+    cnt = 300
+    pygame.font.init()
+    myfont = pygame.font.SysFont('Comic Sans MS', 100)
+    num = 3
+    allow = False
+    textsurface = myfont.render(str(num), False, (255, 255, 255))
     while running:
         boat.rotate()
         screen.fill('blue')
         if allow_left:
-            boat.angle += 2
+            if boat.angle < 90:
+                boat.angle += 2
         if allow_right:
-            boat.angle -= 2
-        beach1.move('up', boat.angle)
-        beach2.move('up', boat.angle)
-        # if sliding and multiplier > 0:
-        #    river.move(direction, boat.angle, multiplier)
-        #    multiplier -= 0.01
+            if boat.angle > - 90:
+                boat.angle -= 2
+        if allow:
+            beach1.move('up', boat.angle)
+            beach2.move('up', boat.angle)
+        elif not allow:
+            if cnt > 200:
+                textsurface = myfont.render('3', False, (255, 255, 255))
+            elif cnt > 100:
+                textsurface = myfont.render('2', False, (255, 255, 255))
+            elif cnt > 0:
+                textsurface = myfont.render('1', False, (255, 255, 255))
+            screen.blit(textsurface, (width - 100, height - 150))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -150,12 +163,16 @@ def boat_run():
         if cnt > 0:
             cnt -= 1
         else:
+            allow = True
             boat.update(beach1, beach2)
         river_sprites.draw(screen)
         all_sprites.draw(screen)
         pygame.display.flip()
         clock.tick(100)
     pygame.quit()
+
+
+
 
 
 boat_run()
