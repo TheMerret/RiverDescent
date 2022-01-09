@@ -1,3 +1,4 @@
 pygame
 foronoi
 shapely
+pyclipper
