@@ -8,9 +8,9 @@ from river_generation.main import RiverGeneration
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
-beach_size = 5000
-river_size = 10000
-river_curvature = 5000
+river_size = 11000
+river_width = 300
+river_curvature = 10000
 
 
 def load_image(path):
@@ -75,14 +75,14 @@ class River(pygame.sprite.Sprite):
 class Beach(River):
     def __init__(self, polygon, site):
         super(River, self).__init__(river_sprites)
-        self.image = pygame.Surface([10000, 10000], pygame.SRCALPHA, 32)
+        self.image = pygame.Surface([river_size, river_size], pygame.SRCALPHA, 32)
         if site == 'left':
-            polygon = [(beach_size, 0)] + polygon
-            polygon = polygon + [(beach_size * 2, beach_size * 2)]
+            polygon = [(river_size, 0)] + polygon
+            polygon = polygon + [(river_size, river_size)]
             for i in range(len(polygon)):
-                polygon[i] = (polygon[i][0] + 100, polygon[i][1])
+                polygon[i] = (polygon[i][0], polygon[i][1])
         if site == 'right':
-            polygon = [(0, beach_size)] + polygon
+            polygon = [(0, river_size)] + polygon
             polygon = polygon + [(0, 0)]
         pygame.draw.polygon(self.image, 'orange', (polygon))
         self.rect = self.image.get_rect()
@@ -96,22 +96,22 @@ def boat_run():
     pygame.display.set_caption("boat")
     screen.fill('blue')
     boat = Boat(boat_image)
-    rg = RiverGeneration(river_size, river_curvature)
-    river_geom = rg.get_river_geom(boat_width, True)
+    rg = RiverGeneration(river_size, 100)
+    river_geom = rg.get_river_geom(river_width, smooth=True)
+    a = (river_geom.left_bank, river_geom.right_bank)
     # import matplotlib.pyplot as plt
     # plt.gca().set_aspect('equal')
     # plt.plot(*zip(*river_geom.path), color='green')
     # plt.plot(*zip(*river_geom.left_bank), color='red')
     # plt.plot(*zip(*river_geom.right_bank), color='blue')
     # plt.show()
-    pol1, pol2 = river_geom.left_bank, river_geom.right_bank
+    pol1, pol2 = a[0], a[1]
     delta_x = pol1[0][0] - boat.x
     delta_y = pol1[0][1] - boat.y
-    # FIXME: берега сами пересекаются
     beach1 = Beach(pol1, 'right')  # сюда правого берега
     beach2 = Beach(pol2, 'left')  # сюда левого береша
-    beach1.rect.x = -delta_x - 300
-    beach2.rect.x = -delta_x - 150
+    beach1.rect.x = -delta_x - river_width
+    beach2.rect.x = -delta_x - river_width
     beach1.rect.y = -delta_y
     beach2.rect.y = -delta_y
     all_sprites.add(boat)
@@ -121,7 +121,7 @@ def boat_run():
     allow_left = False
     allow_up = False
     allow_down = False
-    cnt = 1000
+    cnt = 100
     while running:
         boat.rotate()
         screen.fill('blue')
@@ -129,14 +129,8 @@ def boat_run():
             boat.angle += 2
         if allow_right:
             boat.angle -= 2
-        if allow_up:
-            beach1.move('up', boat.angle)
-            beach2.move('up', boat.angle)
-            # river.move('up', boat.angle)
-        if allow_down:
-            beach1.move('down', boat.angle)
-            beach2.move('down', boat.angle)
-            # river.move('down', boat.angle)
+        beach1.move('up', boat.angle)
+        beach2.move('up', boat.angle)
         # if sliding and multiplier > 0:
         #    river.move(direction, boat.angle, multiplier)
         #    multiplier -= 0.01
@@ -148,19 +142,11 @@ def boat_run():
                     allow_left = True
                 if event.key == pygame.K_RIGHT and not allow_left:
                     allow_right = True
-                if event.key == pygame.K_UP and not allow_down:
-                    allow_up = True
-                if event.key == pygame.K_DOWN and not allow_up:
-                    allow_down = True
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT:
                     allow_right = False
                 if event.key == pygame.K_LEFT:
                     allow_left = False
-                if event.key == pygame.K_UP:
-                    allow_up = False
-                if event.key == pygame.K_DOWN:
-                    allow_down = False
         if cnt > 0:
             cnt -= 1
         else:
