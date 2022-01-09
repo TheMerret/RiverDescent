@@ -465,3 +465,15 @@ def resize_line_on_ends_from_center(line, one_side_offset):
     right_half = [center, (center[0] + right_half_vec[0], center[1] + right_half_vec[1])]
     short_line = [left_half[0], right_half[1]]
     return short_line
+
+
+def get_rectangles_on_line(rectangles, line):
+    res = []
+    for rect in rectangles:
+        rect_lines = zip(rect[::2], rect[1::2])
+        intersecting_lines = [rect_line
+                              for rect_line in rect_lines
+                              if is_intersects(*rect_line, line)]
+        if len(intersecting_lines) > 1:
+            res.append(rect)
+    return res

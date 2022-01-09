@@ -1,11 +1,12 @@
 from itertools import chain, islice
+from random import choice
 
 from river_generation.river_generation import RiverGeom
 from river_generation.utils import (get_path_bisects, clip_lines_by_polygon,
                                     chaikin_smooth, is_intersects, clip_lines_to_fit_rect_by_polygon,
                                     get_distance_between_points, get_vector_normal,
                                     vector_from_points,
-                                    offset_polyline)
+                                    offset_polyline, get_rectangles_on_line)
 
 OBSTACLE_SIZE = (5, 5)
 BOAT_SIZE = (10, 30)  # FIXME: с маленькими размерами Pyclipper выдает ошибку
@@ -64,17 +65,23 @@ class ObstaclesGeneration:
         return control_lines
 
     def get_rectangular_control_lines(self):
+        """Убираем некоторые по бокам препятсвия чтоб лодка развернулась"""
         res = clip_lines_to_fit_rect_by_polygon(self.river_geometry.exterior,
                                                 self.control_lines,
                                                 (BOAT_SIZE[0] * 2, BOAT_SIZE[1]))
         return res
 
     def get_obstacles_boxes(self):
-        obstacles_boxes = []
-        for control_line in self.control_lines:
-            cur_obstacle_boxes = self.get_obstacle_boxes_on_line(control_line)
-            obstacles_boxes.append(cur_obstacle_boxes)
-        return obstacles_boxes
+        res = []
+        obstacles_boxes = (self.get_obstacle_boxes_on_line(control_line)
+                           for control_line in self.control_lines)
+        for (obstacles_boxes_on_line,
+             shorten_control_line) in zip(self.get_rectangular_control_lines(),
+                                          obstacles_boxes):
+            shorten_obstacles = get_rectangles_on_line(obstacles_boxes_on_line,
+                                                       shorten_control_line)
+            obstacles_wo_boat = self.get_obstacles_with_rect_buffer(shorten_obstacles)
+        return res
 
     @staticmethod
     def get_obstacle_boxes_on_line(line):
@@ -94,3 +101,8 @@ class ObstaclesGeneration:
         obstacle_boxes = [offset_polyline(line, OBSTACLE_SIZE[1] / 2)
                           for line in obstacle_center_lines]
         return obstacle_boxes
+
+    def get_obstacles_with_rect_buffer(self, obstacle_boxes):
+        """Расчищаем препятсвия так, чтобы лодка влезала"""
+        box_count_for_rect = BOAT_SIZE[0] // OBSTACLE_SIZE[0] + 1
+        star_ind, start_box = choice(list(enumerate(obstacle_boxes[:-(box_count_for_rect - 1)])))
