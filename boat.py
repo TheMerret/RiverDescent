@@ -8,7 +8,7 @@ from river_generation.main import RiverGeneration
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
-river_size = 5000
+river_size = 10000
 river_width = 300
 river_curvature = 10000
 
@@ -75,15 +75,13 @@ class River(pygame.sprite.Sprite):
 class Beach(River):
     def __init__(self, polygon, site):
         super(River, self).__init__(river_sprites)
-        self.image = pygame.Surface([river_size, river_size], pygame.SRCALPHA, 32)
+        self.image = pygame.Surface([river_size + width, river_size + height], pygame.SRCALPHA, 32)
         if site == 'left':
-            polygon = [(river_size, 0)] + polygon
-            polygon = polygon + [(river_size, river_size)]
+            polygon = [(river_size + width, river_size)] + [(river_size + width, 0)] + polygon
             for i in range(len(polygon)):
                 polygon[i] = (polygon[i][0], polygon[i][1])
         if site == 'right':
-            polygon = [(0, river_size)] + polygon
-            polygon = polygon + [(0, 0)]
+            polygon = [(-width, 0)] + [(-width, river_size)] + polygon
         pygame.draw.polygon(self.image, 'orange', (polygon))
         self.rect = self.image.get_rect()
         self.image = self.image.convert_alpha()
@@ -99,14 +97,6 @@ def boat_run():
     rg = RiverGeneration(river_size, 100)
     river_geom = rg.get_river_geom(river_width, smooth=True)
     a = (river_geom.left_bank, river_geom.right_bank)
-    print(a[0])
-    print(a[1])
-    # import matplotlib.pyplot as plt
-    # plt.gca().set_aspect('equal')
-    # plt.plot(*zip(*river_geom.path), color='green')
-    # plt.plot(*zip(*river_geom.left_bank), color='red')
-    # plt.plot(*zip(*river_geom.right_bank), color='blue')
-    # plt.show()
     pol1, pol2 = a[0], a[1]
     delta_x = pol1[0][0] - boat.x
     delta_y = pol1[0][1] - boat.y
@@ -127,9 +117,12 @@ def boat_run():
     num = 3
     allow = False
     textsurface = myfont.render(str(num), False, (255, 255, 255))
+    finish = myfont.render('финиш', False, (255, 255, 255))
     while running:
         boat.rotate()
         screen.fill('blue')
+        if boat.rect.y < beach1.rect.y or boat.rect.y < beach2.rect.y:
+            exit()
         if allow_left:
             if boat.angle < 90:
                 boat.angle += 2
