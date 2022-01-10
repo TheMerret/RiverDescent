@@ -1,4 +1,4 @@
-from river_generation.river_generation import RiverGeneration
+from river_generation.base_river_generation import RiverGeneration
 from river_generation.obstacles_generation import ObstaclesGeneration
 
 

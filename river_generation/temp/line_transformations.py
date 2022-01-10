@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 from svgpathtools import parse_path, Line, Path, wsvg, smoothed_path
-from river_generation.river_generation import RiverGeneration
+from river_generation.base_river_generation import RiverGeneration
 from river_generation.utils import get_curved_svg_from_points
 # from river_generation.main import get_river_exterior
 

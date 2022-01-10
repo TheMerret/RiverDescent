@@ -2,7 +2,7 @@ from itertools import chain, islice
 from random import choice
 from typing import List
 
-from river_generation.river_generation import RiverGeom
+from river_generation.base_river_generation import RiverGeom
 from river_generation.utils import (get_path_bisects, clip_lines_by_polygon,
                                     chaikin_smooth, is_intersects, clip_lines_to_fit_rect_by_polygon,
                                     get_distance_between_points, get_vector_normal,

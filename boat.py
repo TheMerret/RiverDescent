@@ -3,7 +3,7 @@ import os
 
 import pygame
 
-from river_generation.main import RiverGeneration
+from river_generation import RiverGeneration
 
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
