@@ -50,8 +50,7 @@ class Boat(pygame.sprite.Sprite):
 
     def update(self, beach1, beach2):
         if pygame.sprite.collide_mask(self, beach1) or pygame.sprite.collide_mask(self, beach2):
-            pass
-            #exit()
+            exit()
 
 
 class Obstacle(pygame.sprite.Sprite):
@@ -170,10 +169,10 @@ def boat_run():
         if boat.rect.y < beach1.rect.y or boat.rect.y < beach2.rect.y:
             exit()
         if allow_left:
-            #if boat.angle < 90:
+            if boat.angle < 90:
                 boat.angle += 2
         if allow_right:
-            #if boat.angle > - 90:
+            if boat.angle > - 90:
                 boat.angle -= 2
         if allow:
             beach1.move('up', boat.angle)
