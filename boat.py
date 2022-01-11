@@ -72,6 +72,15 @@ class Obstacle(pygame.sprite.Sprite):
             self.rect.y += math.cos(b) * speed * multiplier
 
 
+class Finish(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Finish, self).__init__(river_sprites)
+        self.image = pygame.transform.scale(load_image('finish.png'), (river_size, 100))
+        self.rect = self.image.get_rect()
+        self.rect.y = -river_size
+        self.mask = pygame.mask.from_surface(self.image)
+
+
 
 class River(pygame.sprite.Sprite):
     def __init__(self, polygon):
@@ -122,9 +131,9 @@ def boat_run():
     obstacle_groups = og.get_obstacle_groups()
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
-    for i in obstacles:
-        obst = Obstacle(i.normalized_rect)
-        obst_sprites.add(obst)
+    #for i in obstacles:
+    #    obst = Obstacle(i.normalized_rect)
+    #    obst_sprites.add(obst)
 
     a = (river_geom.left_bank, river_geom.right_bank)
     pol1, pol2 = a[0], a[1]
@@ -150,7 +159,8 @@ def boat_run():
     num = 3
     allow = False
     textsurface = myfont.render(str(num), False, (255, 255, 255))
-    finish = myfont.render('финиш', False, (255, 255, 255))
+    finish = Finish()
+    river_sprites.add(finish)
     f = True
     while running:
         if allow:
@@ -166,7 +176,7 @@ def boat_run():
             boat.boat_image = boat.image
         boat.rotate()
         screen.fill('blue')
-        if boat.rect.y < beach1.rect.y or boat.rect.y < beach2.rect.y:
+        if pygame.sprite.collide_mask(boat, finish):
             exit()
         if allow_left:
             if boat.angle < 90:
@@ -177,6 +187,8 @@ def boat_run():
         if allow:
             beach1.move('up', boat.angle)
             beach2.move('up', boat.angle)
+            finish.rect.x = beach1.rect.x
+            finish.rect.y = beach1.rect.y
             for i in obst_sprites:
                 i.move('up', boat.angle)
         elif not allow:
