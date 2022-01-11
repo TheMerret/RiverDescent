@@ -238,12 +238,12 @@ class Stoun(pygame.sprite.Sprite):
 
 
 water = WATER((200, 0), (100, 450), (200, 900), (700, 900), (600, 450),  (700, 0))
-boat = BOAT(400, 600, 100, 200)
+#boat = BOAT(400, 600, 100, 200)
 green = GreenSpace(water)
-make_kamushi(water.points)
-brevno = Brevno1(400, 400, 75, 150)
-brevno2 = Brevno2(290, 400, 75, 150)
-stoun = Stoun(290, 300, 150)
+#make_kamushi(water.points)
+#brevno = Brevno1(400, 400, 75, 150)
+#brevno2 = Brevno2(290, 400, 75, 150)
+#stoun = Stoun(290, 300, 150)
 
 # Главный Игровой цикл
 running = True
