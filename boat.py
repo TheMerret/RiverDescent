@@ -3,37 +3,37 @@ import os
 
 import pygame
 
-from river_generation import RiverGeneration
+from river_generation import RiverGeneration, ObstaclesGeneration
 
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
+obst_sprites = pygame.sprite.Group()
 river_size = 10000
 river_width = 300
 river_curvature = 10000
 
 
 def load_image(path):
-    full_path = os.path.join('data', path)
+    full_path = os.path.join('assets', path)
     if not os.path.exists(full_path):
         print(f"Файл с изображением '{full_path}' не найден")
         exit()
     im = pygame.image.load(full_path)
     return im
 
-
-boat_image = load_image('boat.png')
-boat_width, boat_height = boat_image.get_size()
 speed = 5
 
 
 class Boat(pygame.sprite.Sprite):
-    def __init__(self, boat_image):
+    def __init__(self):
         super(Boat, self).__init__(all_sprites)
-        self.image = boat_image
+        self.frame = 1
+        self.image = pygame.transform.scale(load_image(f'boat/change/{self.frame}.png'), (150, 300))
         self.rect = self.image.get_rect()
-        self.rect.x = width // 2 - boat_width / 2
-        self.rect.y = height // 2 - boat_height / 2
+        self.boat_image = self.image
+        self.rect.x = width // 2 - 150 / 2
+        self.rect.y = height // 2 - 300 / 2
         self.angle = 0
         self.x = width // 2
         self.y = height // 2
@@ -41,7 +41,8 @@ class Boat(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def rotate(self):
-        boat_temp_image = pygame.transform.rotate(boat_image, self.angle)
+        im = pygame.transform.scale(self.boat_image, (150, 300))
+        boat_temp_image = pygame.transform.rotate(im, self.angle)
         new_rect = boat_temp_image.get_rect(center=(self.x, self.y))
         self.image = boat_temp_image
         self.rect = new_rect
@@ -49,7 +50,28 @@ class Boat(pygame.sprite.Sprite):
 
     def update(self, beach1, beach2):
         if pygame.sprite.collide_mask(self, beach1) or pygame.sprite.collide_mask(self, beach2):
-            exit()
+            pass
+            #exit()
+
+
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self, rect):
+        super(Obstacle, self).__init__(obst_sprites)
+        self.image = load_image('barriers/smallstone/smallstone.png')
+        self.rect = self.image.get_rect()
+        self.rect.x = rect[0][0]
+        self.rect.y = rect[0][1]
+
+    def move(self, site, angle, multiplier=2):
+        a = math.radians(angle)
+        b = math.radians(angle)
+        if site == 'down':
+            self.rect.x -= math.sin(a) * speed * multiplier
+            self.rect.y -= math.cos(b) * speed * multiplier
+        if site == 'up':
+            self.rect.x += math.sin(a) * speed * multiplier
+            self.rect.y += math.cos(b) * speed * multiplier
+
 
 
 class River(pygame.sprite.Sprite):
@@ -61,7 +83,7 @@ class River(pygame.sprite.Sprite):
         self.image = self.image.convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
 
-    def move(self, site, angle, multiplier=1):
+    def move(self, site, angle, multiplier=2):
         a = math.radians(angle)
         b = math.radians(angle)
         if site == 'down':
@@ -93,9 +115,18 @@ def boat_run():
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("boat")
     screen.fill('blue')
-    boat = Boat(boat_image)
+    boat = Boat()
     rg = RiverGeneration(river_size, 100)
     river_geom = rg.get_river_geom(river_width, smooth=True)
+
+    og = ObstaclesGeneration(river_geom)
+    obstacle_groups = og.get_obstacle_groups()
+    obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
+                 in obstacle_group.obstacles]
+    for i in obstacles:
+        obst = Obstacle(i.normalized_rect)
+        obst_sprites.add(obst)
+
     a = (river_geom.left_bank, river_geom.right_bank)
     pol1, pol2 = a[0], a[1]
     delta_x = pol1[0][0] - boat.x
@@ -106,36 +137,53 @@ def boat_run():
     beach2.rect.x = -delta_x - river_width
     beach1.rect.y = -delta_y
     beach2.rect.y = -delta_y
+    for i in obst_sprites:
+        i.rect.x = i.rect.x - delta_x - river_width
+        i.rect.y = i.rect.y - delta_y
     all_sprites.add(boat)
     clock = pygame.time.Clock()
     running = True
     allow_right = False
     allow_left = False
-    cnt = 300
+    cnt = 150
     pygame.font.init()
     myfont = pygame.font.SysFont('Comic Sans MS', 100)
     num = 3
     allow = False
     textsurface = myfont.render(str(num), False, (255, 255, 255))
     finish = myfont.render('финиш', False, (255, 255, 255))
+    f = True
     while running:
+        if allow:
+            if boat.frame < 17 and f:
+                boat.frame += 1
+            else:
+                if boat.frame == 1:
+                    f = True
+                else:
+                    f = False
+                    boat.frame -= 1
+            boat.image = load_image(f'boat/change/{boat.frame}.png')
+            boat.boat_image = boat.image
         boat.rotate()
         screen.fill('blue')
         if boat.rect.y < beach1.rect.y or boat.rect.y < beach2.rect.y:
             exit()
         if allow_left:
-            if boat.angle < 90:
+            #if boat.angle < 90:
                 boat.angle += 2
         if allow_right:
-            if boat.angle > - 90:
+            #if boat.angle > - 90:
                 boat.angle -= 2
         if allow:
             beach1.move('up', boat.angle)
             beach2.move('up', boat.angle)
+            for i in obst_sprites:
+                i.move('up', boat.angle)
         elif not allow:
-            if cnt > 200:
+            if cnt > 100:
                 textsurface = myfont.render('3', False, (255, 255, 255))
-            elif cnt > 100:
+            elif cnt > 50:
                 textsurface = myfont.render('2', False, (255, 255, 255))
             elif cnt > 0:
                 textsurface = myfont.render('1', False, (255, 255, 255))
@@ -160,8 +208,9 @@ def boat_run():
             boat.update(beach1, beach2)
         river_sprites.draw(screen)
         all_sprites.draw(screen)
+        obst_sprites.draw(screen)
         pygame.display.flip()
-        clock.tick(100)
+        clock.tick(50)
     pygame.quit()
 
 
