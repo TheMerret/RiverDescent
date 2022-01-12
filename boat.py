@@ -48,9 +48,12 @@ class Boat(pygame.sprite.Sprite):
         self.rect = new_rect
         self.mask = pygame.mask.from_surface(self.image)
 
-    def update(self, beach1, beach2):
+    def update(self, beach1, beach2, obsts):
         if pygame.sprite.collide_mask(self, beach1) or pygame.sprite.collide_mask(self, beach2):
             exit()
+        for i in obsts:
+            if pygame.sprite.collide_mask(self, i):
+                exit()
 
 
 class Obstacle(pygame.sprite.Sprite):
@@ -58,8 +61,9 @@ class Obstacle(pygame.sprite.Sprite):
         super(Obstacle, self).__init__(obst_sprites)
         self.image = load_image('barriers/smallstone/smallstone.png')
         self.rect = self.image.get_rect()
-        self.rect.x = rect[0][0]
-        self.rect.y = rect[0][1]
+        self.rect.x = round(rect[0][0], 0)
+        self.rect.y = round(rect[0][1], 0)
+        self.mask = pygame.mask.from_surface(self.image)
 
     def move(self, site, angle, multiplier=2):
         a = math.radians(angle)
@@ -68,8 +72,8 @@ class Obstacle(pygame.sprite.Sprite):
             self.rect.x -= math.sin(a) * speed * multiplier
             self.rect.y -= math.cos(b) * speed * multiplier
         if site == 'up':
-            self.rect.x += math.sin(a) * speed * multiplier
-            self.rect.y += math.cos(b) * speed * multiplier
+            self.rect.x += round(math.sin(a) * speed * multiplier, 0)
+            self.rect.y += round(math.cos(b) * speed * multiplier, 0)
 
 
 class Finish(pygame.sprite.Sprite):
@@ -98,8 +102,8 @@ class River(pygame.sprite.Sprite):
             self.rect.x -= math.sin(a) * speed * multiplier
             self.rect.y -= math.cos(b) * speed * multiplier
         if site == 'up':
-            self.rect.x += math.sin(a) * speed * multiplier
-            self.rect.y += math.cos(b) * speed * multiplier
+            self.rect.x += round(math.sin(a) * speed * multiplier, 0)
+            self.rect.y += round(math.cos(b) * speed * multiplier, 0)
 
 
 class Beach(River):
@@ -131,9 +135,10 @@ def boat_run():
     obstacle_groups = og.get_obstacle_groups()
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
+
     for i in obstacles:
-       obst = Obstacle(i.normalized_rect)
-       obst_sprites.add(obst)
+        obst = Obstacle(i.normalized_rect)
+        obst_sprites.add(obst)
 
     import matplotlib.pyplot as plt
     plt.gca().set_aspect('equal')
@@ -152,10 +157,10 @@ def boat_run():
     delta_y = pol1[0][1] - boat.y
     beach1 = Beach(pol1, 'right')  # сюда правого берега
     beach2 = Beach(pol2, 'left')  # сюда левого береша
-    beach1.rect.x = -delta_x - river_width
-    beach2.rect.x = -delta_x - river_width
-    beach1.rect.y = -delta_y
-    beach2.rect.y = -delta_y
+    beach1.rect.x = round(-delta_x - river_width, 0)
+    beach2.rect.x = round(-delta_x - river_width, 0)
+    beach1.rect.y = round(-delta_y, 0)
+    beach2.rect.y = round(-delta_y, 0)
     for i in obst_sprites:
         i.rect.x = i.rect.x - delta_x - river_width
         i.rect.y = i.rect.y - delta_y
@@ -196,12 +201,12 @@ def boat_run():
             if boat.angle > - 90:
                 boat.angle -= 2
         if allow:
+            for i in obst_sprites:
+                i.move('up', boat.angle)
             beach1.move('up', boat.angle)
             beach2.move('up', boat.angle)
             finish.rect.x = beach1.rect.x
             finish.rect.y = beach1.rect.y
-            for i in obst_sprites:
-                i.move('up', boat.angle)
         elif not allow:
             if cnt > 100:
                 textsurface = myfont.render('3', False, (255, 255, 255))
@@ -227,10 +232,11 @@ def boat_run():
             cnt -= 1
         else:
             allow = True
-            boat.update(beach1, beach2)
+            boat.update(beach1, beach2, obst_sprites)
+        obst_sprites.draw(screen)
         river_sprites.draw(screen)
         all_sprites.draw(screen)
-        obst_sprites.draw(screen)
+
         pygame.display.flip()
         clock.tick(50)
     pygame.quit()
