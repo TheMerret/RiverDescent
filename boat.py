@@ -140,16 +140,16 @@ def boat_run():
         obst = Obstacle(i.normalized_rect)
         obst_sprites.add(obst)
 
-    import matplotlib.pyplot as plt
-    plt.gca().set_aspect('equal')
-    exterior = river_geom.exterior
-    plt.plot(*zip(*exterior))
-    for line in og.control_lines:
-        plt.plot(*zip(*line), color='orange')
-    for group in obstacle_groups:
-        for box in group.obstacles:
-            plt.plot(*zip(*box.normalized_rect), color='red')
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # plt.gca().set_aspect('equal')
+    # exterior = river_geom.exterior
+    # plt.plot(*zip(*exterior))
+    # for line in og.control_lines:
+    #     plt.plot(*zip(*line), color='orange')
+    # for group in obstacle_groups:
+    #     for box in group.obstacles:
+    #         plt.plot(*zip(*box.normalized_rect), color='red')
+    # plt.show()
 
     a = (river_geom.left_bank, river_geom.right_bank)
     pol1, pol2 = a[0], a[1]
