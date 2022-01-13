@@ -281,10 +281,10 @@ class RiverGeom:
                                 + self.left_bank[:])
         if smooth:
             self.smooth_banks()
-        self.exterior = (list(self.bottom_segment)
-                         + self.right_bank
-                         + list(self.top_segment)
-                         + self.left_bank)
+        self.exterior = (list(self.bottom_segment)[:-1]
+                         + self.right_bank[:-1]
+                         + list(self.top_segment)[:-1]
+                         + self.left_bank)[:-1]
 
         self.width = vector_length(vector_from_points(*self.bottom_segment))  # or self.top_segment
 
