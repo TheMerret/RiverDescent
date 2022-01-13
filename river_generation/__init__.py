@@ -1,2 +1,3 @@
 from river_generation.base_river_generation import RiverGeneration, RiverGeom
 from river_generation.obstacles_generation import ObstaclesGeneration, ObstacleGeom, ObstacleGroup
+from river_generation.river_data_saver import save_river_data, load_river_data

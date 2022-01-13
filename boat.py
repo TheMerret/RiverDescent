@@ -3,7 +3,7 @@ import os
 
 import pygame
 
-from river_generation import RiverGeneration, ObstaclesGeneration
+from river_generation import RiverGeneration, ObstaclesGeneration, save_river_data, load_river_data
 
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
@@ -21,6 +21,7 @@ def load_image(path):
         exit()
     im = pygame.image.load(full_path)
     return im
+
 
 speed = 5
 
@@ -85,7 +86,6 @@ class Finish(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
-
 class River(pygame.sprite.Sprite):
     def __init__(self, polygon):
         super(River, self).__init__(river_sprites)
@@ -128,11 +128,17 @@ def boat_run():
     pygame.display.set_caption("boat")
     screen.fill('blue')
     boat = Boat()
-    rg = RiverGeneration(river_size, 100)
-    river_geom = rg.get_river_geom(river_width, smooth=True)
+    save = False
 
-    og = ObstaclesGeneration(river_geom)
-    obstacle_groups = og.get_obstacle_groups()
+    if save:
+        rg = RiverGeneration(river_size, 100)
+        river_geom = rg.get_river_geom(river_width, smooth=True)
+
+        og = ObstaclesGeneration(river_geom)
+        obstacle_groups = og.get_obstacle_groups()
+        save_river_data(river_geom, obstacle_groups, 'river_data/last_river_data.json')
+    else:
+        river_geom, obstacle_groups = load_river_data('river_data/last_river_data.json')
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
 
@@ -240,9 +246,6 @@ def boat_run():
         pygame.display.flip()
         clock.tick(50)
     pygame.quit()
-
-
-
 
 
 boat_run()
