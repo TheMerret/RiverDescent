@@ -199,6 +199,7 @@ def boat_run():
                     boat.frame -= 1
             boat.image = load_image(f'boat/change/{boat.frame}.png')
             boat.boat_image = boat.image
+        print(boat.frame)
         boat.rotate()
         screen.fill('blue')
         if pygame.sprite.collide_mask(boat, finish):
