@@ -1,5 +1,6 @@
 import math
 import os
+import random
 
 import pygame
 
@@ -60,7 +61,15 @@ class Boat(pygame.sprite.Sprite):
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, rect):
         super(Obstacle, self).__init__(obst_sprites)
-        self.image = load_image('barriers/smallstone/smallstone.png')
+        a = random.choice(['hut/хатка5.1.png', 'smallstone/smallstone.png', 'bigstone/bigstoun.png'])
+        self.image = load_image(f'barriers/{a}')
+        if a == 'smallstone/smallstone.png':
+            self.image = pygame.transform.scale(self.image, (40, 40))
+        elif a == 'hut/хатка5.1.png':
+            self.image = pygame.transform.scale(self.image, (70, 70))
+        else:
+            self.image = pygame.transform.scale(self.image, (60, 60))
+        self.image = pygame.transform.rotate(self.image, random.randint(-360, 360))
         self.rect = self.image.get_rect()
         self.rect.x = round(rect[0][0], 0)
         self.rect.y = round(rect[0][1], 0)
@@ -186,7 +195,7 @@ def boat_run():
     f = True
     while running:
         if allow:
-            if boat.frame < 17 and f:
+            if boat.frame < 87 and f:
                 boat.frame += 1
             else:
                 if boat.frame == 1:
@@ -196,6 +205,7 @@ def boat_run():
                     boat.frame -= 1
             boat.image = load_image(f'boat/change/{boat.frame}.png')
             boat.boat_image = boat.image
+        print(boat.frame)
         boat.rotate()
         screen.fill('blue')
         if pygame.sprite.collide_mask(boat, finish):
