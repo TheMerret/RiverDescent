@@ -95,6 +95,21 @@ class Finish(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
 
+class Pier(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Pier, self).__init__(river_sprites)
+        self.image = pygame.transform.scale(load_image('pier/1.png'), (width * 1.5, 1 * height))
+        self.rect = self.image.get_rect()
+        self.rect.x = - 0.25 * width
+        self.rect.y = 0
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def move(self, angle, multiplier=2):
+        a = math.radians(angle)
+        self.rect.x += round(math.sin(a) * speed * multiplier, 0)
+        self.rect.y += round(math.cos(a) * speed * multiplier, 0)
+
+
 class River(pygame.sprite.Sprite):
     def __init__(self, polygon):
         super(River, self).__init__(river_sprites)
@@ -120,11 +135,11 @@ class Beach(River):
         super(River, self).__init__(river_sprites)
         self.image = pygame.Surface([river_size + width, river_size + height], pygame.SRCALPHA, 32)
         if site == 'left':
-            polygon = [(river_size + width, river_size)] + [(river_size + width, 0)] + polygon
+            polygon = [(river_size + width, river_size * 2)] + [(river_size + width, 0)] + polygon
             for i in range(len(polygon)):
                 polygon[i] = (polygon[i][0], polygon[i][1])
         if site == 'right':
-            polygon = [(-width, 0)] + [(-width, river_size)] + polygon
+            polygon = [(-width, 0)] + [(-width, river_size * 2)] + polygon
         pygame.draw.polygon(self.image, 'orange', (polygon))
         self.rect = self.image.get_rect()
         self.image = self.image.convert_alpha()
@@ -151,20 +166,7 @@ def boat_run():
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
 
-    for i in obstacles:
-        obst = Obstacle(i.normalized_rect)
-        obst_sprites.add(obst)
 
-    # import matplotlib.pyplot as plt
-    # plt.gca().set_aspect('equal')
-    # exterior = river_geom.exterior
-    # plt.plot(*zip(*exterior))
-    # for line in og.control_lines:
-    #     plt.plot(*zip(*line), color='orange')
-    # for group in obstacle_groups:
-    #     for box in group.obstacles:
-    #         plt.plot(*zip(*box.normalized_rect), color='red')
-    # plt.show()
 
     a = (river_geom.left_bank, river_geom.right_bank)
     pol1, pol2 = a[0], a[1]
@@ -172,6 +174,9 @@ def boat_run():
     delta_y = pol1[0][1] - boat.y
     beach1 = Beach(pol1, 'right')  # сюда правого берега
     beach2 = Beach(pol2, 'left')  # сюда левого береша
+    pier = Pier()
+    for i in obstacles:
+        obst = Obstacle(i.normalized_rect)
     beach1.rect.x = round(-delta_x - river_width, 0)
     beach2.rect.x = round(-delta_x - river_width, 0)
     beach1.rect.y = round(-delta_y, 0)
@@ -179,6 +184,9 @@ def boat_run():
     for i in obst_sprites:
         i.rect.x = i.rect.x - delta_x - river_width
         i.rect.y = i.rect.y - delta_y
+        i.mask = pygame.mask.from_surface(i.image)
+        if pygame.sprite.collide_mask(i, beach1) or pygame.sprite.collide_mask(i, beach2):
+            obst_sprites.remove(i)
     all_sprites.add(boat)
     clock = pygame.time.Clock()
     running = True
@@ -195,17 +203,12 @@ def boat_run():
     f = True
     while running:
         if allow:
-            if boat.frame < 87 and f:
+            if boat.frame < 104:
                 boat.frame += 1
             else:
-                if boat.frame == 1:
-                    f = True
-                else:
-                    f = False
-                    boat.frame -= 1
+                boat.frame = 1
             boat.image = load_image(f'boat/change/{boat.frame}.png')
             boat.boat_image = boat.image
-        print(boat.frame)
         boat.rotate()
         screen.fill('blue')
         if pygame.sprite.collide_mask(boat, finish):
@@ -219,10 +222,13 @@ def boat_run():
         if allow:
             for i in obst_sprites:
                 i.move('up', boat.angle)
+                if i.rect.y > height:
+                    obst_sprites.remove(i)
             beach1.move('up', boat.angle)
             beach2.move('up', boat.angle)
             finish.rect.x = beach1.rect.x
             finish.rect.y = beach1.rect.y
+            pier.move(boat.angle)
         elif not allow:
             if cnt > 100:
                 textsurface = myfont.render('3', False, (255, 255, 255))
@@ -230,7 +236,6 @@ def boat_run():
                 textsurface = myfont.render('2', False, (255, 255, 255))
             elif cnt > 0:
                 textsurface = myfont.render('1', False, (255, 255, 255))
-            screen.blit(textsurface, (width - 100, height - 150))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -252,9 +257,11 @@ def boat_run():
         obst_sprites.draw(screen)
         river_sprites.draw(screen)
         all_sprites.draw(screen)
-
+        if not allow:
+            screen.blit(textsurface, (width - 100, height - 150))
         pygame.display.flip()
-        clock.tick(50)
+        if allow:
+            clock.tick(50)
     pygame.quit()
 
 
