@@ -11,7 +11,7 @@ from river_generation.utils import (get_path_bisects, clip_lines_by_polygon,
                                     rotate_polygon, get_mean_of_two_points)
 
 OBSTACLE_SIZE = (100, 100)
-BOAT_SIZE = (170, 300)  # FIXME: с маленькими размерами Pyclipper выдает ошибку
+BOAT_SIZE = (270, 400)  # FIXME: с маленькими размерами Pyclipper выдает ошибку
 MIN_BUFF_COEFFICIENT = 1.5  # минимальное расстояние между препятствиями, относительно длины лодки
 min_buff = BOAT_SIZE[1] * MIN_BUFF_COEFFICIENT
 # Это коефициент сглаживания.

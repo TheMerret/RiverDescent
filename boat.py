@@ -11,9 +11,10 @@ all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
 obst_sprites = pygame.sprite.Group()
 river_size = 10000
-river_width = 300
+river_width = 250
 river_curvature = 10000
-
+levels_base_path = os.path.normpath('./river_data/levels')
+current_level_id = 2
 
 def load_image(path):
     full_path = os.path.join('assets', path)
@@ -131,13 +132,26 @@ class Beach(River):
         self.mask = pygame.mask.from_surface(self.image)
 
 
+def save_river_data_by_id(river_geom, obstacle_groups, identifier: int):
+    file_type = '.json'
+    save_path = os.path.join(levels_base_path, str(identifier) + file_type)
+    save_river_data(river_geom, obstacle_groups, save_path)
+
+
+def load_river_data_by_id(identifier: int):
+    file_type = '.json'
+    load_path = os.path.join(levels_base_path, str(identifier) + file_type)
+    river_geom, obstacle_groups = load_river_data(load_path)
+    return river_geom, obstacle_groups
+
+
 def boat_run():
     pygame.init()
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("boat")
     screen.fill('blue')
     boat = Boat()
-    save = False
+    save = True
 
     if save:
         rg = RiverGeneration(river_size, 100)
@@ -145,9 +159,9 @@ def boat_run():
 
         og = ObstaclesGeneration(river_geom)
         obstacle_groups = og.get_obstacle_groups()
-        save_river_data(river_geom, obstacle_groups, 'river_data/last_river_data.json')
+        save_river_data_by_id(river_geom, obstacle_groups, current_level_id)
     else:
-        river_geom, obstacle_groups = load_river_data('river_data/last_river_data.json')
+        river_geom, obstacle_groups = load_river_data_by_id(current_level_id)
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
 
