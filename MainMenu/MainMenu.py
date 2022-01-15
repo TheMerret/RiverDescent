@@ -6,7 +6,7 @@ pygame.init()
 FPS = 20
 
 WIDTH = 1000
-HEIGHT = 1000
+HEIGHT = 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 all_sprites = pygame.sprite.Group()
@@ -32,6 +32,7 @@ def load_image(name, color_key=None, way_to_file="try\\left"):
 
 class Button(pygame.sprite.Sprite):
     xm, ym, pushed = None, None, 0
+
     def __init__(self, x, y, w, h, screen, signaltype, signal,
                  imagepath=None, imagename=None,
                  ONtext=None, ONfontsize=60, ONtextcolor=(100, 255, 100),
@@ -51,6 +52,11 @@ class Button(pygame.sprite.Sprite):
         if self.imagepath and self.imagename:
             self.image = self.load_image(self.imagename, way_to_file=self.imagepath)
             self.image = pygame.transform.scale(self.image, (self.w, self.h))
+            self.image = self.image.subsurface(pygame.Rect((0, 0), self.rect.size))
+        else:
+            self.image = pygame.Surface((self.w, self.h))
+            pygame.Surface.fill(self.image, pygame.Color(255, 255, 255))
+            pygame.Surface.set_colorkey(self.image, pygame.Color(255, 255, 255))
             self.image = self.image.subsurface(pygame.Rect((0, 0), self.rect.size))
 
         pygame.draw.rect(self.screen, self.ONtextcolor, (self.x - 2, self.y - 2,
@@ -115,7 +121,7 @@ counting = 0
 for i in range(300, 750, 250):
     for j in range(120, 880, 130):
         counting += 1
-        button = Button(j, i, 100, 100, screen, 1, counting, imagepath="data", imagename="иконка228.png", ONtext=f"{counting}",
+        button = Button(j, i, 100, 100, screen, 1, counting,imagepath="data", imagename="иконка228.png", ONtext=f"{counting}",
                 ONtextcolor=(34, 139, 34), UNDERtext=f"level {counting}", UNDERtextcolor=(232, 194, 44))
 
 
