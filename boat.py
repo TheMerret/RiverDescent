@@ -287,6 +287,11 @@ def boat_run(screen, level_id):
         if not a:
             running = False
             show_end_screen('fail')
+    screen.fill('black')
+    pygame.display.flip()
+    all_sprites.empty()
+    obst_sprites.empty()
+    river_sprites.empty()
     pygame.quit()
 
 
