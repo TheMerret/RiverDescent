@@ -43,7 +43,10 @@ def load_menu_with_buttons():
         image = screen.blit(load_image("123.png", way_to_file="MainMenu/data"),
                             pygame.Rect((0, 0), (WIDTH, HEIGHT)))
         all_sprites.draw(screen)
-        all_sprites.update()
+        try:
+            all_sprites.update()
+        except pygame.error:
+            return
         pygame.display.flip()
         clock.tick(FPS)
 
