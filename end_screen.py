@@ -57,7 +57,7 @@ def show_end_screen(result, time=0):
     while running:
         screen.blit(sc, (0, 0))
         if result == 'complete':
-            time = str(time)[:5].replace('.', ':')
+            time = str(time)[:5]
             time_surface = myfont2.render(f'Ваше время {time} сек', False, (255, 255, 255))
             textsurface = myfont.render('Вы прошли уровень!', False, (255, 255, 255))
             screen.blit(textsurface, (3, 0))
