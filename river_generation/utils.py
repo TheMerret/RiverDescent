@@ -430,6 +430,7 @@ def clip_lines_to_fit_rect_by_polygon(polygon, lines, rect_size):
         clipped_lines = clip_geom_by_polygon(polygon, expanded_lines, geom_closed=False)
         # варианты соедений
         try:
+            # FIXME: IndexError: как будто линий нет
             line_connecting_variants = ((p1, p2)
                                         for p1 in clipped_lines[0]
                                         for p2 in clipped_lines[1])
