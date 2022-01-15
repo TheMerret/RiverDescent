@@ -44,7 +44,7 @@ def viz_river_generation(voronoi: foronoi.Voronoi, edges=None, points=None, path
         viz = viz.plot_sites(points)
     if path_points:
         viz = viz.plot_vertices(path_points, color='green')
-    viz.show()
+    viz.show(False)
     return viz
 
 
@@ -52,8 +52,63 @@ def test_voronoi():
     rg = RiverGeneration(1000, 100)
     viz = viz_river_generation(rg.voronoi)
     viz.canvas.set_axis_off()
-    viz.canvas.figure.savefig('base_voronoi.png', dpi=1200, transparent=True)
+    viz.canvas.figure.savefig('base_voronoi1.png', dpi=600, transparent=True)
     viz.canvas.set_axis_on()
+    import matplotlib.pyplot as plt
+    plt.gca().set_aspect('equal')
+    path = rg.get_river_path()
+    plt.plot(*zip(*path), color='red', lw=3)
+    plt.gca().set_axis_off()
+    plt.savefig('voronoi_with_path2.png', dpi=600, transparent=True)
+    plt.gca().set_axis_on()
+    plt.gca().clear()
+    plt.plot(*zip(*path), color='red')
+    plt.gca().set_axis_off()
+    plt.savefig('just_path3.png', dpi=600, transparent=True)
+    plt.gca().set_axis_on()
+    river_geom = rg.get_river_geom(20, smooth=True)
+    plt.plot(*zip(*river_geom.origin_exterior))
+    plt.gca().set_axis_off()
+    plt.savefig('exterior_path4.png', dpi=600, transparent=True)
+    plt.gca().set_axis_on()
+    plt.gca().clear()
+    plt.plot(*zip(*path), color='red')
+    plt.plot(*zip(*river_geom.exterior))
+    plt.gca().set_axis_off()
+    plt.savefig('smooth_exterior_path5.png', dpi=600, transparent=True)
+    plt.gca().set_axis_on()
+    og = ObstaclesGeneration(river_geom, (15, 30), (5, 5))
+    obstacle_groups = og.get_obstacle_groups()
+    for group in obstacle_groups:
+        plt.plot(*zip(*group.control_line), color='orange', lw=.7)
+    plt.gca().set_axis_off()
+    plt.savefig('smooth_exterior_path_control_lines6.png', dpi=600, transparent=True)
+    plt.gca().set_axis_on()
+    plt.gca().clear()
+    plt.plot(*zip(*river_geom.exterior))
+    for group in obstacle_groups:
+        plt.plot(*zip(*group.control_line), color='orange')
+    plt.gca().set_axis_off()
+    plt.savefig('smooth_exterior_control_lines7.png', dpi=600, transparent=True)
+    plt.gca().set_axis_on()
+    plt.gca().clear()
+    plt.plot(*zip(*river_geom.exterior))
+    for group in obstacle_groups:
+        plt.plot(*zip(*group.control_line), color='orange', lw=.7)
+        for box in group.obstacles:
+            plt.plot(*zip(*box.original_rect), color='magenta', lw=.7)
+    plt.gca().set_axis_off()
+    plt.savefig('smooth_exterior_control_lines_obstacles8.png', dpi=600, transparent=True)
+    plt.gca().set_axis_on()
+    plt.gca().clear()
+    plt.plot(*zip(*river_geom.exterior))
+    for group in obstacle_groups:
+        for box in group.obstacles:
+            plt.plot(*zip(*box.original_rect), color='magenta', lw=.7)
+    plt.gca().set_axis_off()
+    plt.savefig('smooth_exterior_obstacles9.png', dpi=600, transparent=True)
+    plt.gca().set_axis_on()
+    print()
 
 
 def test_path_on_voronoi():
