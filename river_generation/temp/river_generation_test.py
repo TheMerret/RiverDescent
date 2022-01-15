@@ -32,18 +32,36 @@ def plot_vertices_in_line(vertices):
     plt.show()
 
 
-def viz_river_generation(voronoi: foronoi.Voronoi, edges, points, path_points=None):
+def viz_river_generation(voronoi: foronoi.Voronoi, edges=None, points=None, path_points=None):
     foronoi.visualization.Visualizer.plot_vertices = plot_vertices
 
     viz = foronoi.visualization.Visualizer(voronoi) \
         .plot_sites(show_labels=False) \
-        .plot_edges(show_labels=False) \
-        .plot_edges(edges, show_labels=False, color='red') \
-        .plot_vertices() \
-        .plot_vertices(points, color='red')
+        .plot_edges(show_labels=False, color='#1f77b4')
+    if edges:
+        viz = viz.plot_edges(edges, show_labels=False, color='red')
+    if points:
+        viz = viz.plot_sites(points)
     if path_points:
         viz = viz.plot_vertices(path_points, color='green')
     viz.show()
+    return viz
+
+
+def test_voronoi():
+    rg = RiverGeneration(1000, 100)
+    viz = viz_river_generation(rg.voronoi)
+    viz.canvas.set_axis_off()
+    viz.canvas.figure.savefig('base_voronoi.png', dpi=1200, transparent=True)
+    viz.canvas.set_axis_on()
+
+
+def test_path_on_voronoi():
+    rg = RiverGeneration(1000, 100)
+    viz = viz_river_generation(rg.voronoi)
+    viz.canvas.set_axis_off()
+    viz.canvas.figure.savefig('base_voronoi.png', dpi=1200, transparent=True)
+    viz.canvas.set_axis_on()
 
 
 def test_perpendicular():
@@ -287,4 +305,4 @@ def main():
 
 
 if __name__ == '__main__':
-    test_obstacle_boxes()
+    test_voronoi()
