@@ -11,11 +11,12 @@ all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
 obst_sprites = pygame.sprite.Group()
 river_size = 10000
-river_width = 250
+river_width = 385
 river_curvature = 10000
 levels_base_path = os.path.normpath('./river_data/levels')
 current_level_id = 2
 frames_count = 104
+
 
 def load_image(path):
     full_path = os.path.join('assets', path)
@@ -173,15 +174,13 @@ def boat_run():
         rg = RiverGeneration(river_size, 100)
         river_geom = rg.get_river_geom(river_width, smooth=True)
 
-        og = ObstaclesGeneration(river_geom)
+        og = ObstaclesGeneration(river_geom, boat_size=(70, 300))
         obstacle_groups = og.get_obstacle_groups()
         save_river_data_by_id(river_geom, obstacle_groups, current_level_id)
     else:
         river_geom, obstacle_groups = load_river_data_by_id(current_level_id)
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
-
-
 
     a = (river_geom.left_bank, river_geom.right_bank)
     pol1, pol2 = a[0], a[1]
