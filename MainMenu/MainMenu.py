@@ -75,7 +75,7 @@ class Button(pygame.sprite.Sprite):
 
         pygame.draw.rect(self.screen, self.ONtextcolor, (self.x - 2, self.y - 2,
                                                          self.w + 4, self.h + 4), 1)
-
+        self.ONrendertext = None
         if self.ONtext:
             self.ONfont = pygame.font.Font(None, self.ONfontsize)
             self.ONrendertext = self.ONfont.render(self.ONtext, True, self.ONtextcolor)
@@ -85,6 +85,7 @@ class Button(pygame.sprite.Sprite):
             self.ONy = self.y + self.h // 2 - self.ONh // 2
             self.screen.blit(self.ONrendertext, (self.ONx, self.ONy))
 
+        self.UNDERrendertext = None
         if self.UNDERtext:
             self.UNDERfont = pygame.font.Font(None, self.UNDERfontsize)
             self.UNDERrendertext = self.UNDERfont.render(self.UNDERtext, True, self.UNDERtextcolor)
@@ -111,8 +112,10 @@ class Button(pygame.sprite.Sprite):
             else:
                 pygame.draw.rect(self.screen, self.ONtextcolor, (self.x - 2, self.y - 2,
                                                                  self.w + 4, self.h + 4), 1)
-        self.screen.blit(self.UNDERrendertext, (self.UNDERx, self.UNDERy))
-        self.screen.blit(self.ONrendertext, (self.ONx, self.ONy))
+        if self.UNDERrendertext is not None:
+            self.screen.blit(self.UNDERrendertext, (self.UNDERx, self.UNDERy))
+        if self.ONrendertext is not None:
+            self.screen.blit(self.ONrendertext, (self.ONx, self.ONy))
 
     def send_signal(self):
         self.signal.emit()
