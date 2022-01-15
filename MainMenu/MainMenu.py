@@ -125,31 +125,32 @@ for i in range(300, 750, 250):
                 ONtextcolor=(34, 139, 34), UNDERtext=f"level {counting}", UNDERtextcolor=(232, 194, 44))
 
 
-running = True
-flagDown = 0
-flagUp = 0
-while running:
-    WIDTH, HEIGHT = pygame.display.get_window_size()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.MOUSEMOTION:
-            Button.xm, Button.ym = event.pos
-            x, y = event.pos
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                flagDown = 1
-        if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
-                flagUp = 1
-    if flagDown and flagUp:
-        Button.pushed = 1
-        flagDown, flagUp = 0, 0
-    else:
-        Button.pushed = 0
-    screen.fill(pygame.Color("white"))
-    image = screen.blit(load_image("123.png", way_to_file="data"), pygame.Rect((0, 0), (WIDTH, HEIGHT)))
-    all_sprites.draw(screen)
-    all_sprites.update()
-    pygame.display.flip()
-    clock.tick(FPS)
+def menu_run():
+    running = True
+    flagDown = 0
+    flagUp = 0
+    while running:
+        WIDTH, HEIGHT = pygame.display.get_window_size()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.MOUSEMOTION:
+                Button.xm, Button.ym = event.pos
+                x, y = event.pos
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    flagDown = 1
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    flagUp = 1
+        if flagDown and flagUp:
+            Button.pushed = 1
+            flagDown, flagUp = 0, 0
+        else:
+            Button.pushed = 0
+        screen.fill(pygame.Color("white"))
+        image = screen.blit(load_image("123.png", way_to_file="data"), pygame.Rect((0, 0), (WIDTH, HEIGHT)))
+        all_sprites.draw(screen)
+        all_sprites.update()
+        pygame.display.flip()
+        clock.tick(FPS)

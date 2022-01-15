@@ -3,16 +3,15 @@ import os
 import random
 import time
 import pygame
-from end_screen import *
 from river_generation import RiverGeneration, ObstaclesGeneration, save_river_data, load_river_data
 
 
 size = width, height = 1000, 800
+river_size = 10000
+river_width = 300
 all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
 obst_sprites = pygame.sprite.Group()
-river_size = 10000
-river_width = 300
 river_curvature = 10000
 levels_base_path = os.path.normpath('./river_data/levels')
 current_level_id = 2
@@ -209,6 +208,7 @@ def boat_run():
     running = True
     allow_right = False
     allow_left = False
+    main = ''
     cnt = 150
     pygame.font.init()
     myfont = pygame.font.SysFont('Comic Sans MS', 100)
@@ -232,11 +232,17 @@ def boat_run():
         if pygame.sprite.collide_mask(boat, finish):
             toc = time.perf_counter()
             running = False
-            show_end_screen('complete', toc - tic)
-        if allow_left:
+            for i in all_sprites:
+                i.kill()
+            for i in river_sprites:
+                i.kill()
+            for i in obst_sprites:
+                i.kill()
+            return show_end_screen('complete', toc - tic)
+        if allow_left is True:
             if boat.angle < 90:
                 boat.angle += 2
-        if allow_right:
+        if allow_right is True:
             if boat.angle > - 90:
                 boat.angle -= 2
         if allow:
@@ -260,15 +266,24 @@ def boat_run():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT and not allow_right:
+                if event.key == pygame.K_LEFT:
                     allow_left = True
-                if event.key == pygame.K_RIGHT and not allow_left:
+                    if allow_right is True:
+                        allow_right = 'prev'
+                if event.key == pygame.K_RIGHT:
                     allow_right = True
+                    if allow_left is True:
+                        allow_left = 'prev'
+
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT:
                     allow_right = False
+                    if allow_left == 'prev':
+                        allow_left = True
                 if event.key == pygame.K_LEFT:
                     allow_left = False
+                    if allow_right == 'prev':
+                        allow_right = True
         if cnt > 0:
             cnt -= 1
         else:
@@ -284,8 +299,93 @@ def boat_run():
         if allow:
             clock.tick(50)
         if not a:
-            running = False
-            return show_end_screen('fail')
+           running = False
+           for i in all_sprites:
+               i.kill()
+           for i in river_sprites:
+               i.kill()
+           for i in obst_sprites:
+               i.kill()
+           return show_end_screen('fail')
+    pygame.quit()
+
+
+def load_image_2(path):
+    full_path = os.path.join(path)
+    if not os.path.exists(full_path):
+        print(f"Файл с изображением '{full_path}' не найден")
+        exit()
+    im = pygame.image.load(full_path)
+    im = im.convert_alpha()
+    return im
+
+
+class Button(pygame.sprite.Sprite):
+    def __init__(self, button_sprites, x, y, pos):
+        super(Button, self).__init__(button_sprites)
+        self.image = load_image_2('EndScreen/data/иконка228.png')
+        self.image = pygame.transform.scale(self.image, (width / 2, height / 4))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.pos = pos
+
+    def shining(self, x, y, screen):
+        if self.rect.x <= x <= self.rect.x + self.rect[2] and self.rect.y <= y <= self.rect.y + self.rect[3]:
+            pygame.draw.rect(screen, (0, 255, 50), (self.rect.x - 3, self.rect.y - 3, self.rect[2] + 6, self.rect[3] + 6))
+
+    def click(self, x, y):
+        if self.rect.x <= x <= self.rect.x + self.rect[2] and self.rect.y <= y <= self.rect.y + self.rect[3]:
+            return self.pos
+
+
+def show_end_screen(result, time=0):
+    button_sprites = pygame.sprite.Group()
+    screen = pygame.display.set_mode(size)
+    sc = load_image_2('EndScreen/data/end_screen.jpg')
+    screen.blit(sc, (0, 0))
+    pygame.font.init()
+    myfont = pygame.font.SysFont('Comic Sans MS', 100)
+    myfont2 = pygame.font.SysFont('Comic Sans MS', 80)
+    back_in_menu = myfont2.render('В меню', False, (255, 255, 255))
+    again = myfont2.render('Снова', False, (255, 255, 255))
+    running = True
+    but1 = Button(button_sprites, 0.25 * width, 0.4 * height, 'menu')
+    but2 = Button(button_sprites, 0.25 * width, 0.7 * height, 'again')
+    button_sprites.add(but1)
+    button_sprites.add(but2)
+    x, y = 0, 0
+    a = ''
+    while running:
+        screen.blit(sc, (0, 0))
+        if result == 'complete':
+            time = str(time)[:5].replace('.', ':')
+            time_surface = myfont2.render(f'Ваше время {time} сек', False, (255, 255, 255))
+            textsurface = myfont.render('Вы прошли уровень!', False, (255, 255, 255))
+            screen.blit(textsurface, (3, 0))
+            screen.blit(time_surface, (70, 150))
+        if result == 'fail':
+            textsurface = myfont.render('Вы разбили лодку(', False, (255, 255, 255))
+            screen.blit(textsurface, (60, 80))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEMOTION:
+                x, y = event.pos
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                x1, y1 = event.pos
+                a = but1.click(x1, y1)
+                b = but2.click(x1, y1)
+                if b == 'again':
+                    return boat_run()
+                if a == 'menu':
+                    return
+        but1.shining(x, y, screen)
+        but2.shining(x, y, screen)
+        button_sprites.draw(screen)
+        screen.blit(back_in_menu, (0.35 * width, 0.4 * height + 35))
+        screen.blit(again, (0.38 * width, 0.7 * height + 35))
+        pygame.display.flip()
     pygame.quit()
 
 
