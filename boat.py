@@ -165,9 +165,7 @@ def load_river_data_by_id(identifier: int):
     return river_geom, obstacle_groups
 
 
-def boat_run():
-    pygame.init()
-    screen = pygame.display.set_mode(size)
+def boat_run(screen, level_id):
     pygame.display.set_caption("boat")
     screen.fill('blue')
     boat = Boat()
@@ -179,9 +177,9 @@ def boat_run():
 
         og = ObstaclesGeneration(river_geom, boat_size=(boat_width, 300))
         obstacle_groups = og.get_obstacle_groups()
-        save_river_data_by_id(river_geom, obstacle_groups, current_level_id)
+        save_river_data_by_id(river_geom, obstacle_groups, level_id)
     else:
-        river_geom, obstacle_groups = load_river_data_by_id(current_level_id)
+        river_geom, obstacle_groups = load_river_data_by_id(level_id)
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
 
@@ -282,4 +280,6 @@ def boat_run():
     pygame.quit()
 
 
-boat_run()
+if __name__ == '__main__':
+    screen = pygame.display.set_mode(size)
+    boat_run(screen, 1)

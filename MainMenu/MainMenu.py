@@ -50,8 +50,8 @@ class Button(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, screen, signaltype, signal,
                  imagepath=None, imagename=None,
                  ONtext=None, ONfontsize=60, ONtextcolor=(100, 255, 100),
-                 UNDERtext=None, UNDERfontsize=30, UNDERtextcolor=(100, 255, 100)):
-        super().__init__(all_sprites, buttons)
+                 UNDERtext=None, UNDERfontsize=30, UNDERtextcolor=(100, 255, 100), groups=()):
+        super().__init__(*groups)
         self.screen = screen
         self.signal = Signal(signaltype, signal)
         self.x, self.y, self.w, self.h = x, y, w, h
@@ -64,7 +64,7 @@ class Button(pygame.sprite.Sprite):
         self.rect = self.rect.move(x, y)
 
         if self.imagepath and self.imagename:
-            self.image = self.load_image(self.imagename, way_to_file=self.imagepath)
+            self.image = load_image(self.imagename, way_to_file=self.imagepath)
             self.image = pygame.transform.scale(self.image, (self.w, self.h))
             self.image = self.image.subsurface(pygame.Rect((0, 0), self.rect.size))
         else:
@@ -74,7 +74,7 @@ class Button(pygame.sprite.Sprite):
             self.image = self.image.subsurface(pygame.Rect((0, 0), self.rect.size))
 
         pygame.draw.rect(self.screen, self.ONtextcolor, (self.x - 2, self.y - 2,
-                                               self.w + 4, self.h + 4), 1)
+                                                         self.w + 4, self.h + 4), 1)
 
         if self.ONtext:
             self.ONfont = pygame.font.Font(None, self.ONfontsize)
@@ -114,32 +114,19 @@ class Button(pygame.sprite.Sprite):
         self.screen.blit(self.UNDERrendertext, (self.UNDERx, self.UNDERy))
         self.screen.blit(self.ONrendertext, (self.ONx, self.ONy))
 
-    def load_image(self, name, color_key=None, way_to_file="try\\left"):
-        fullname = os.path.join(way_to_file, name)
-        try:
-            image = pygame.image.load(fullname)
-        except pygame.error as message:
-            print('Cannot load image:', name)
-            raise SystemExit(message)
-        if color_key is not None:
-            if color_key == -1:
-                color_key = image.get_at((0, 0))
-            image.set_colorkey(color_key)
-        else:
-            image = image.convert_alpha()
-        return image
-
     def send_signal(self):
         self.signal.emit()
 
 
-if __name__ == '__main__':
+def main():
     counting = 0
     for i in range(300, 750, 250):
         for j in range(120, 880, 130):
             counting += 1
-            button = Button(j, i, 100, 100, screen, 1, counting,imagepath="data", imagename="иконка228.png", ONtext=f"{counting}",
-                    ONtextcolor=(34, 139, 34), UNDERtext=f"level {counting}", UNDERtextcolor=(232, 194, 44))
+            button = Button(j, i, 100, 100, screen, 1, counting, imagepath="data",
+                            imagename="иконка228.png", ONtext=f"{counting}",
+                            ONtextcolor=(34, 139, 34), UNDERtext=f"level {counting}",
+                            UNDERtextcolor=(232, 194, 44), groups=(all_sprites, buttons))
 
     running = True
     flagDown = 0
@@ -164,8 +151,13 @@ if __name__ == '__main__':
         else:
             Button.pushed = 0
         screen.fill(pygame.Color("white"))
-        image = screen.blit(load_image("123.png", way_to_file="data"), pygame.Rect((0, 0), (WIDTH, HEIGHT)))
+        image = screen.blit(load_image("123.png", way_to_file="data"),
+                            pygame.Rect((0, 0), (WIDTH, HEIGHT)))
         all_sprites.draw(screen)
         all_sprites.update()
         pygame.display.flip()
         clock.tick(FPS)
+
+
+if __name__ == '__main__':
+    main()
