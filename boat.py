@@ -15,6 +15,7 @@ river_width = 250
 river_curvature = 10000
 levels_base_path = os.path.normpath('./river_data/levels')
 current_level_id = 2
+frames_count = 104
 
 def load_image(path):
     full_path = os.path.join('assets', path)
@@ -217,7 +218,7 @@ def boat_run():
     f = True
     while running:
         if allow:
-            if boat.frame < 104:
+            if boat.frame < frames_count:
                 boat.frame += 1
             else:
                 boat.frame = 1
