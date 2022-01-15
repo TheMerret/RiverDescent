@@ -1,6 +1,6 @@
 import os
+
 import pygame
-from boat import boat_run
 
 
 size = width, height = 1000, 800

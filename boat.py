@@ -12,10 +12,13 @@ all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
 obst_sprites = pygame.sprite.Group()
 river_size = 10000
-river_width = 300
 river_curvature = 10000
 levels_base_path = os.path.normpath('./river_data/levels')
-current_level_id = 2
+current_level_id = 9
+river_width_variants = [400, 387, 374, 361, 348, 335, 322, 309, 296, 283, 270, 257]
+river_width = river_width_variants[current_level_id - 1]
+boat_width_variants = [257, 240, 223, 206, 189, 172, 155, 138, 121, 104, 87, 70]
+boat_width = boat_width_variants[current_level_id - 1]
 frames_count = 104
 
 
@@ -164,23 +167,21 @@ def load_river_data_by_id(identifier: int):
     return river_geom, obstacle_groups
 
 
-def boat_run():
-    pygame.init()
-    screen = pygame.display.set_mode(size)
+def boat_run(screen, level_id):
     pygame.display.set_caption("boat")
     screen.fill('blue')
     boat = Boat()
-    save = True
+    save = False
 
     if save:
         rg = RiverGeneration(river_size, 100)
         river_geom = rg.get_river_geom(river_width, smooth=True)
 
-        og = ObstaclesGeneration(river_geom, boat_size=(70, 300))
+        og = ObstaclesGeneration(river_geom, boat_size=(boat_width, 300))
         obstacle_groups = og.get_obstacle_groups()
-        save_river_data_by_id(river_geom, obstacle_groups, current_level_id)
+        save_river_data_by_id(river_geom, obstacle_groups, level_id)
     else:
-        river_geom, obstacle_groups = load_river_data_by_id(current_level_id)
+        river_geom, obstacle_groups = load_river_data_by_id(level_id)
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
 
@@ -192,8 +193,7 @@ def boat_run():
     beach2 = Beach(pol2, 'left')  # сюда левого береша
     pier = Pier()
     for i in obstacles:
-        if random.randint(0, 2) == 1:
-            obst = Obstacle(i.normalized_rect)
+        obst = Obstacle(i.normalized_rect)
     beach1.rect.x = round(-delta_x - river_width, 0)
     beach2.rect.x = round(-delta_x - river_width, 0)
     beach1.rect.y = round(-delta_y, 0)
@@ -289,4 +289,6 @@ def boat_run():
     pygame.quit()
 
 
-boat_run()
+if __name__ == '__main__':
+    screen = pygame.display.set_mode(size)
+    boat_run(screen, 1)
