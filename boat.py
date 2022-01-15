@@ -1,16 +1,18 @@
 import math
 import os
 import random
-
+import time
 import pygame
-
+from end_screen import show_end_screen
 from river_generation import RiverGeneration, ObstaclesGeneration, save_river_data, load_river_data
+
 
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
 obst_sprites = pygame.sprite.Group()
 river_size = 10000
+river_width = 300
 river_curvature = 10000
 levels_base_path = os.path.normpath('./river_data/levels')
 current_level_id = 9
@@ -58,10 +60,11 @@ class Boat(pygame.sprite.Sprite):
 
     def update(self, beach1, beach2, obsts):
         if pygame.sprite.collide_mask(self, beach1) or pygame.sprite.collide_mask(self, beach2):
-            exit()
+            return False
         for i in obsts:
             if pygame.sprite.collide_mask(self, i):
-                exit()
+                return False
+        return True
 
 
 class Obstacle(pygame.sprite.Sprite):
@@ -70,11 +73,11 @@ class Obstacle(pygame.sprite.Sprite):
         a = random.choice(['hut/хатка5.1.png', 'smallstone/smallstone.png', 'bigstone/bigstoun.png'])
         self.image = load_image(f'barriers/{a}')
         if a == 'smallstone/smallstone.png':
-            self.image = pygame.transform.scale(self.image, (40, 40))
-        elif a == 'hut/хатка5.1.png':
             self.image = pygame.transform.scale(self.image, (70, 70))
+        elif a == 'hut/хатка5.1.png':
+            self.image = pygame.transform.scale(self.image, (100, 100))
         else:
-            self.image = pygame.transform.scale(self.image, (60, 60))
+            self.image = pygame.transform.scale(self.image, (110, 110))
         self.image = pygame.transform.rotate(self.image, random.randint(-360, 360))
         self.rect = self.image.get_rect()
         self.rect.x = round(rect[0][0], 0)
@@ -216,6 +219,7 @@ def boat_run(screen, level_id):
     finish = Finish()
     river_sprites.add(finish)
     f = True
+    tic = time.perf_counter()
     while running:
         if allow:
             if boat.frame < frames_count:
@@ -227,7 +231,9 @@ def boat_run(screen, level_id):
         boat.rotate()
         screen.fill('blue')
         if pygame.sprite.collide_mask(boat, finish):
-            exit()
+            toc = time.perf_counter()
+            running = False
+            show_end_screen('complete', toc - tic)
         if allow_left:
             if boat.angle < 90:
                 boat.angle += 2
@@ -269,6 +275,7 @@ def boat_run(screen, level_id):
         else:
             allow = True
             boat.update(beach1, beach2, obst_sprites)
+            a = boat.update(beach1, beach2, obst_sprites)
         obst_sprites.draw(screen)
         river_sprites.draw(screen)
         all_sprites.draw(screen)
@@ -277,6 +284,9 @@ def boat_run(screen, level_id):
         pygame.display.flip()
         if allow:
             clock.tick(50)
+        if not a:
+            running = False
+            show_end_screen('fail')
     pygame.quit()
 
 
