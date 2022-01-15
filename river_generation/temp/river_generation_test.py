@@ -55,6 +55,7 @@ def test_voronoi():
     viz.canvas.figure.savefig('base_voronoi1.png', dpi=600, transparent=True)
     viz.canvas.set_axis_on()
     import matplotlib.pyplot as plt
+    plt.gca().clear()
     plt.gca().set_aspect('equal')
     path = rg.get_river_path()
     plt.plot(*zip(*path), color='red', lw=3)
