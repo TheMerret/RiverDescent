@@ -1,5 +1,6 @@
 from boat import boat_run
 
+
 def main():
     boat_run()
 
