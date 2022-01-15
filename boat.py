@@ -11,8 +11,11 @@ all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
 obst_sprites = pygame.sprite.Group()
 river_size = 10000
-river_width = 300
+river_width = 385
 river_curvature = 10000
+levels_base_path = os.path.normpath('./river_data/levels')
+current_level_id = 2
+frames_count = 104
 
 
 def load_image(path):
@@ -146,27 +149,38 @@ class Beach(River):
         self.mask = pygame.mask.from_surface(self.image)
 
 
+def save_river_data_by_id(river_geom, obstacle_groups, identifier: int):
+    file_type = '.json'
+    save_path = os.path.join(levels_base_path, str(identifier) + file_type)
+    save_river_data(river_geom, obstacle_groups, save_path)
+
+
+def load_river_data_by_id(identifier: int):
+    file_type = '.json'
+    load_path = os.path.join(levels_base_path, str(identifier) + file_type)
+    river_geom, obstacle_groups = load_river_data(load_path)
+    return river_geom, obstacle_groups
+
+
 def boat_run():
     pygame.init()
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("boat")
     screen.fill('blue')
     boat = Boat()
-    save = False
+    save = True
 
     if save:
         rg = RiverGeneration(river_size, 100)
         river_geom = rg.get_river_geom(river_width, smooth=True)
 
-        og = ObstaclesGeneration(river_geom)
+        og = ObstaclesGeneration(river_geom, boat_size=(70, 300))
         obstacle_groups = og.get_obstacle_groups()
-        save_river_data(river_geom, obstacle_groups, 'river_data/last_river_data.json')
+        save_river_data_by_id(river_geom, obstacle_groups, current_level_id)
     else:
-        river_geom, obstacle_groups = load_river_data('river_data/last_river_data.json')
+        river_geom, obstacle_groups = load_river_data_by_id(current_level_id)
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
-
-
 
     a = (river_geom.left_bank, river_geom.right_bank)
     pol1, pol2 = a[0], a[1]
@@ -203,7 +217,7 @@ def boat_run():
     f = True
     while running:
         if allow:
-            if boat.frame < 104:
+            if boat.frame < frames_count:
                 boat.frame += 1
             else:
                 boat.frame = 1
