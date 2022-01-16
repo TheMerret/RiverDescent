@@ -2,6 +2,12 @@ import os
 import sys
 import pygame
 
+
+icon = pygame.image.load('assets\\icon\\icon.png')
+pygame.display.set_icon(icon)
+pygame.display.set_caption('River Descent')
+
+
 pygame.init()
 FPS = 20
 

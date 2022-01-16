@@ -2,10 +2,6 @@ from MainMenu.MainMenu import *
 from boat import boat_run
 
 
-icon = pygame.image.load('assets\\icon\\icon.png')
-pygame.display.set_icon(icon)
-
-
 def show_loading_screen():
     screen.fill('black')
     background = load_image('123.png', way_to_file='MainMenu/data')
