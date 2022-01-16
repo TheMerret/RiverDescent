@@ -1,8 +1,9 @@
 import os
 
 import pygame
-from boat import *
 from MainMenu.MainMenu import Button
+
+__all__ = ['show_end_screen']
 
 size = width, height = 1000, 800
 
@@ -68,9 +69,9 @@ def show_end_screen(result, time=0):
         else:
             Button.pushed = 0
         if but1.pushed == 1:
-            return
+            return 'menu'
         elif but2.pushed == 1:
-            return boat_run(screen, 1)
+            return 'retry'
         screen.blit(sc, (0, 0))
         if result == 'complete':
             time = str(time)[:5]

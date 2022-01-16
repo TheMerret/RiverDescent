@@ -13,7 +13,9 @@ def load_menu_with_buttons():
                             UNDERtextcolor=(232, 194, 44), groups=(all_sprites, buttons))
 
             def slot(scrn=screen, id_=button.signal.id_):
-                boat_run(scrn, id_)
+                res = boat_run(scrn, id_)
+                if res == 'retry':
+                    slot(scrn, id_)
 
             button.signal.connect(slot)
 

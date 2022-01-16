@@ -11,15 +11,18 @@ size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
 obst_sprites = pygame.sprite.Group()
-river_size = 10000
-river_curvature = 10000
 levels_base_path = os.path.normpath('./river_data/levels')
-current_level_id = 9
-river_width_variants = [400, 387, 374, 361, 348, 335, 322, 309, 296, 283, 270, 257]
-river_width = river_width_variants[current_level_id - 1]
-boat_width_variants = [257, 240, 223, 206, 189, 172, 155, 138, 121, 104, 87, 70]
-boat_width = boat_width_variants[current_level_id - 1]
 frames_count = 104
+
+
+class RiverProperties:
+    river_size = 10000
+    river_curvature = 10000
+    current_level_id = 9
+    river_width_variants = [400, 387, 374, 361, 348, 335, 322, 309, 296, 283, 270, 257]
+    river_width = river_width_variants[current_level_id - 1]
+    boat_width_variants = [257, 240, 223, 206, 189, 172, 155, 138, 121, 104, 87, 70]
+    boat_width = boat_width_variants[current_level_id - 1]
 
 
 def load_image(path):
@@ -97,9 +100,9 @@ class Obstacle(pygame.sprite.Sprite):
 class Finish(pygame.sprite.Sprite):
     def __init__(self):
         super(Finish, self).__init__(river_sprites)
-        self.image = pygame.transform.scale(load_image('finish.png'), (river_size, 100))
+        self.image = pygame.transform.scale(load_image('finish.png'), (RiverProperties.river_size, 100))
         self.rect = self.image.get_rect()
-        self.rect.y = -river_size
+        self.rect.y = -RiverProperties.river_size
         self.mask = pygame.mask.from_surface(self.image)
 
 
@@ -141,13 +144,13 @@ class River(pygame.sprite.Sprite):
 class Beach(River):
     def __init__(self, polygon, site):
         super(River, self).__init__(river_sprites)
-        self.image = pygame.Surface([river_size + width, river_size + height], pygame.SRCALPHA, 32)
+        self.image = pygame.Surface([RiverProperties.river_size + width, RiverProperties.river_size + height], pygame.SRCALPHA, 32)
         if site == 'left':
-            polygon = [(river_size + width, river_size * 2)] + [(river_size + width, 0)] + polygon
+            polygon = [(RiverProperties.river_size + width, RiverProperties.river_size * 2)] + [(RiverProperties.river_size + width, 0)] + polygon
             for i in range(len(polygon)):
                 polygon[i] = (polygon[i][0], polygon[i][1])
         if site == 'right':
-            polygon = [(-width, 0)] + [(-width, river_size * 2)] + polygon
+            polygon = [(-width, 0)] + [(-width, RiverProperties.river_size * 2)] + polygon
         pygame.draw.polygon(self.image, 'orange', (polygon))
         self.rect = self.image.get_rect()
         self.image = self.image.convert_alpha()
@@ -167,21 +170,35 @@ def load_river_data_by_id(identifier: int):
     return river_geom, obstacle_groups
 
 
-def boat_run(screen, level_id):
-    pygame.display.set_caption("boat")
-    screen.fill('blue')
-    boat = Boat()
-    save = False
+def get_river_data(level_id):
+    generate = False
 
-    if save:
-        rg = RiverGeneration(river_size, 100)
-        river_geom = rg.get_river_geom(river_width, smooth=True)
+    if generate:
+        rg = RiverGeneration(RiverProperties.river_size, 100)
+        river_geom = rg.get_river_geom(RiverProperties.river_width, smooth=True)
 
-        og = ObstaclesGeneration(river_geom, boat_size=(boat_width, 300))
+        og = ObstaclesGeneration(river_geom, boat_size=(RiverProperties.boat_width, 300))
         obstacle_groups = og.get_obstacle_groups()
         save_river_data_by_id(river_geom, obstacle_groups, level_id)
     else:
         river_geom, obstacle_groups = load_river_data_by_id(level_id)
+        RiverProperties.river_width = river_geom.width
+
+    return river_geom, obstacle_groups
+
+
+def clean_up():
+    all_sprites.empty()
+    river_sprites.empty()
+    obst_sprites.empty()
+
+
+def boat_run(screen, level_id):
+    pygame.display.set_caption("boat")
+    screen.fill('blue')
+    boat = Boat()
+
+    river_geom, obstacle_groups = get_river_data(level_id)
     obstacles = [obstacle for obstacle_group in obstacle_groups for obstacle
                  in obstacle_group.obstacles]
 
@@ -194,12 +211,12 @@ def boat_run(screen, level_id):
     pier = Pier()
     for i in obstacles:
         obst = Obstacle(i.normalized_rect)
-    beach1.rect.x = round(-delta_x - river_width, 0)
-    beach2.rect.x = round(-delta_x - river_width, 0)
+    beach1.rect.x = round(-delta_x - RiverProperties.river_width, 0)
+    beach2.rect.x = round(-delta_x - RiverProperties.river_width, 0)
     beach1.rect.y = round(-delta_y, 0)
     beach2.rect.y = round(-delta_y, 0)
     for i in obst_sprites:
-        i.rect.x = i.rect.x - delta_x - river_width
+        i.rect.x = i.rect.x - delta_x - RiverProperties.river_width
         i.rect.y = i.rect.y - delta_y
         i.mask = pygame.mask.from_surface(i.image)
         if pygame.sprite.collide_mask(i, beach1) or pygame.sprite.collide_mask(i, beach2):
@@ -232,7 +249,8 @@ def boat_run(screen, level_id):
         if pygame.sprite.collide_mask(boat, finish):
             toc = time.perf_counter()
             running = False
-            show_end_screen('complete', toc - tic)
+            clean_up()
+            return show_end_screen('complete', toc - tic)
         if allow_left is True:
             if boat.angle < 90:
                 boat.angle += 2
@@ -294,6 +312,7 @@ def boat_run(screen, level_id):
             clock.tick(50)
         if not a:
             running = False
+            clean_up()
             return show_end_screen('fail')
     pygame.quit()
 
