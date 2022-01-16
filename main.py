@@ -9,7 +9,8 @@ def show_loading_screen():
     text_color = (158, 218, 155)
     pygame.font.init()
     font = pygame.font.SysFont('Comic Sans MS', 100)
-    for ind, text in zip(range(-1, 2, 2), 'Подождите...\nИгра загружается...'.splitlines()):
+    lines = 'Подождите...\nИгра загружается...'.splitlines()
+    for ind, text in zip(range(-1, 2, 2), lines):
         text_surface = font.render(text, False, text_color)
         width, height = text_surface.get_size()
         center = WIDTH / 2, HEIGHT * (1 / 3)

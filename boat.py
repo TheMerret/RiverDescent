@@ -73,20 +73,20 @@ class Boat(pygame.sprite.Sprite):
 
 
 class Obstacle(pygame.sprite.Sprite):
-    def __init__(self, rect):
+    def __init__(self, center):
         super(Obstacle, self).__init__(obst_sprites)
         a = random.choice(['hut/хатка5.1.png', 'smallstone/smallstone.png', 'bigstone/bigstoun.png'])
         self.image = load_image(f'barriers/{a}')
         if a == 'smallstone/smallstone.png':
             self.image = pygame.transform.scale(self.image, (70, 70))
         elif a == 'hut/хатка5.1.png':
-            self.image = pygame.transform.scale(self.image, (100, 100))
+            self.image = pygame.transform.scale(self.image, (80, 80))
         else:
-            self.image = pygame.transform.scale(self.image, (110, 110))
+            self.image = pygame.transform.scale(self.image, (90, 90))
         self.image = pygame.transform.rotate(self.image, random.randint(-360, 360))
         self.rect = self.image.get_rect()
-        self.rect.x = round(rect[0][0], 0)
-        self.rect.y = round(rect[0][1], 0)
+        self.rect.x = round(center[0], 0)
+        self.rect.y = round(center[1], 0)
         self.mask = pygame.mask.from_surface(self.image)
 
     def move(self, site, angle, multiplier=2):
@@ -221,7 +221,7 @@ def boat_run(boat_screen, level_id):
     pier = Pier()
     for i in obstacles:
         i: ObstacleGeom
-        Obstacle(i.normalized_rect)
+        Obstacle(i.center)
     beach1.rect.x = round(-delta_x - RiverProperties.river_width, 0)
     beach2.rect.x = round(-delta_x - RiverProperties.river_width, 0)
     beach1.rect.y = round(-delta_y, 0)
@@ -329,4 +329,4 @@ def boat_run(boat_screen, level_id):
 
 if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
-    boat_run(screen, 1)
+    boat_run(screen, 10)
