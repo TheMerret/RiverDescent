@@ -1,5 +1,21 @@
-from boat import boat_run
 from MainMenu.MainMenu import *
+from boat import boat_run
+
+
+def show_loading_screen():
+    screen.fill('black')
+    background = load_image('123.png', way_to_file='MainMenu/data')
+    screen.blit(background, (0, 0))
+    text_color = (158, 218, 155)
+    pygame.font.init()
+    font = pygame.font.SysFont('Comic Sans MS', 100)
+    for ind, text in zip(range(-1, 2, 2), 'Подождите...\nИгра загружается...'.splitlines()):
+        text_surface = font.render(text, False, text_color)
+        width, height = text_surface.get_size()
+        center = WIDTH / 2, HEIGHT * (1 / 3)
+        top_left_text_corner = center[0] - width / 2, center[1] + ind * (height / 2)
+        screen.blit(text_surface, top_left_text_corner)
+    pygame.display.flip()
 
 
 def load_menu_with_buttons():
@@ -13,6 +29,7 @@ def load_menu_with_buttons():
                             UNDERtextcolor=(232, 194, 44), groups=(all_sprites, buttons))
 
             def slot(scrn=screen, id_=button.signal.id_):
+                show_loading_screen()
                 res = boat_run(scrn, id_)
                 if res == 'retry':
                     slot(scrn, id_)
