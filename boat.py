@@ -249,7 +249,7 @@ def boat_run(boat_screen, level_id):
     tic = time.perf_counter()
     water = load_image('water/watero_o.jpg')
 
-    water_x, water_y = pol1[0][0] -delta_x - RiverProperties.river_width - 2000, -10000
+    water_x, water_y = 0, -10000
     d_x = 0
     d_y = 0
     while running:
