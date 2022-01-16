@@ -14,6 +14,7 @@ size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
 river_sprites = pygame.sprite.Group()
 obst_sprites = pygame.sprite.Group()
+water_sprites = pygame.sprite.Group()
 levels_base_path = os.path.normpath('./river_data/levels')
 frames_count = 104
 
@@ -166,6 +167,15 @@ class Beach(River):
         self.image.blit(grass, (0, 0), None, pygame.BLEND_RGBA_MULT)
 
 
+class Water(River):
+    def __init__(self, x, y):
+        super(River, self).__init__(water_sprites)
+        self.image = pygame.transform.scale(load_image('water/watero_o.jpg'), (13000, 11000))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
 def save_river_data_by_id(river_geom, obstacle_groups, identifier: int):
     file_type = '.json'
     save_path = os.path.join(levels_base_path, str(identifier) + file_type)
@@ -202,6 +212,7 @@ def clean_up():
     all_sprites.empty()
     river_sprites.empty()
     obst_sprites.empty()
+    water_sprites.empty()
 
 
 def boat_run(boat_screen, level_id):
@@ -249,9 +260,7 @@ def boat_run(boat_screen, level_id):
     finish = Finish()
     river_sprites.add(finish)
     tic = time.perf_counter()
-    water = pygame.transform.scale(load_image('water/watero_o.jpg'), (13000, 11000))
-
-    water_x, water_y = -delta_x - RiverProperties.river_width, -10000
+    water = Water(round(-delta_x - RiverProperties.river_width), -10000)
     d_x = 0
     d_y = 0
     while running:
@@ -264,9 +273,6 @@ def boat_run(boat_screen, level_id):
             boat.boat_image = boat.image
         boat.rotate()
         boat_screen.fill('blue')
-        boat_screen.blit(water, (water_x, water_y))
-        water_x -= round(d_x, 0)
-        water_y -= round(d_y, 0)
         if pygame.sprite.collide_mask(boat, finish):
             toc = time.perf_counter()
             clean_up()
@@ -278,17 +284,14 @@ def boat_run(boat_screen, level_id):
             if boat.angle > - 90:
                 boat.angle -= 2
         if allow:
-            d_x = round(beach1.rect.x, 0)
-            d_y = round(beach1.rect.y, 0)
             for i in obst_sprites:
                 i: Obstacle
                 i.move('up', boat.angle)
                 if i.rect.y > height:
                     obst_sprites.remove(i)
             beach1.move('up', boat.angle)
-            d_x -= round(beach1.rect.x, 0)
-            d_y -= round(beach1.rect.y, 0)
             beach2.move('up', boat.angle)
+            water.move('up', boat.angle)
             finish.rect.x = beach1.rect.x
             finish.rect.y = beach1.rect.y
             pier.move(boat.angle)
@@ -327,6 +330,7 @@ def boat_run(boat_screen, level_id):
             allow = True
             boat.update(beach1, beach2, obst_sprites)
             a = boat.update(beach1, beach2, obst_sprites)
+        water_sprites.draw(boat_screen)
         obst_sprites.draw(boat_screen)
         river_sprites.draw(boat_screen)
         all_sprites.draw(boat_screen)
