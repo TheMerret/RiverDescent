@@ -45,7 +45,7 @@ speed = 5
 class Boat(pygame.sprite.Sprite):
     def __init__(self):
         super(Boat, self).__init__(all_sprites)
-        self.frame = 1
+        self.frame = 18
         self.image = pygame.transform.scale(load_image(f'boat/change/{self.frame}.png'), (150, 300))
         self.rect = self.image.get_rect()
         self.boat_image = self.image
@@ -292,8 +292,8 @@ def boat_run(boat_screen, level_id):
             beach1.move('up', boat.angle)
             beach2.move('up', boat.angle)
             water.move('up', boat.angle)
-            finish.rect.x = beach1.rect.x
-            finish.rect.y = beach1.rect.y
+            finish.rect.x = beach1.rect.x + height
+            finish.rect.y = beach1.rect.y + height
             pier.move(boat.angle)
         elif not allow:
             if cnt > 100:
