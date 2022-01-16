@@ -233,10 +233,10 @@ def boat_run(screen, level_id):
             toc = time.perf_counter()
             running = False
             show_end_screen('complete', toc - tic)
-        if allow_left:
+        if allow_left is True:
             if boat.angle < 90:
                 boat.angle += 2
-        if allow_right:
+        if allow_right is True:
             if boat.angle > - 90:
                 boat.angle -= 2
         if allow:
@@ -260,15 +260,24 @@ def boat_run(screen, level_id):
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT and not allow_right:
+                if event.key == pygame.K_LEFT:
                     allow_left = True
-                if event.key == pygame.K_RIGHT and not allow_left:
+                    if allow_right is True:
+                        allow_right = 'prev'
+                if event.key == pygame.K_RIGHT:
                     allow_right = True
+                    if allow_left is True:
+                        allow_left = 'prev'
+
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT:
                     allow_right = False
+                    if allow_left == 'prev':
+                        allow_left = True
                 if event.key == pygame.K_LEFT:
                     allow_left = False
+                    if allow_right == 'prev':
+                        allow_right = True
         if cnt > 0:
             cnt -= 1
         else:
