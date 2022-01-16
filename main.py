@@ -99,7 +99,7 @@ def start_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 button.kill()
-                running = False
+                pygame.quit()
             if event.type == pygame.MOUSEMOTION:
                 Button.xm, Button.ym = event.pos
                 x, y = event.pos
@@ -115,7 +115,7 @@ def start_screen():
         else:
             Button.pushed = 0
         screen.fill(pygame.Color("white"))
-        image = screen.blit(load_image("start_screen.png", way_to_file="assets/start_screen"),
+        image = screen.blit(load_image("start_screen.png", way_to_file="assets\\start_screen"),
                             pygame.Rect((0, 0), (WIDTH, HEIGHT)))
         all_sprites.draw(screen)
         try:
