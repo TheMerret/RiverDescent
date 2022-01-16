@@ -18,10 +18,6 @@ def load_image(path):
     return im
 
 
-def func():
-    pass
-
-
 def show_end_screen(result, time=0):
     button_sprites = pygame.sprite.Group()
     screen = pygame.display.set_mode(size)
@@ -41,8 +37,6 @@ def show_end_screen(result, time=0):
                   imagepath="EndScreen\\data",
                   imagename="иконка228.png", ONtext="Снова", ONtextcolor=(34, 139, 34),
                   groups=(button_sprites,))
-    but1.signal.connect(func)
-    but2.signal.connect(func)
     x, y = 0, 0
     flagDown = 0
     flagUp = 0
@@ -53,7 +47,6 @@ def show_end_screen(result, time=0):
             elif event.type == pygame.MOUSEMOTION:
                 Button.xm, Button.ym = event.pos
                 x, y = event.pos
-                print(x, y)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     flagDown = 1

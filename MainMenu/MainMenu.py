@@ -95,7 +95,7 @@ class Button(pygame.sprite.Sprite):
             self.UNDERy = self.y + self.h + int(self.h * 0.06)
             self.screen.blit(self.UNDERrendertext, (self.UNDERx, self.UNDERy))
 
-        self.signal.connect(lambda: print(self.signal.signal_type, self.signal.id_))
+        # self.signal.connect(lambda: print(self.signal.signal_type, self.signal.id_))
 
     def update(self):
         self.pushed = Button.pushed
