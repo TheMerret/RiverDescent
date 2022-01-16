@@ -1,7 +1,7 @@
 import os
 
 import pygame
-
+from boat import *
 from MainMenu.MainMenu import Button
 
 size = width, height = 1000, 800
@@ -15,6 +15,10 @@ def load_image(path):
     im = pygame.image.load(full_path)
     im = im.convert_alpha()
     return im
+
+
+def func():
+    pass
 
 
 def show_end_screen(result, time=0):
@@ -36,6 +40,8 @@ def show_end_screen(result, time=0):
                   imagepath="EndScreen\\data",
                   imagename="иконка228.png", ONtext="Снова", ONtextcolor=(34, 139, 34),
                   groups=(button_sprites,))
+    but1.signal.connect(func)
+    but2.signal.connect(func)
     x, y = 0, 0
     flagDown = 0
     flagUp = 0
@@ -46,6 +52,7 @@ def show_end_screen(result, time=0):
             elif event.type == pygame.MOUSEMOTION:
                 Button.xm, Button.ym = event.pos
                 x, y = event.pos
+                print(x, y)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     flagDown = 1
@@ -53,10 +60,17 @@ def show_end_screen(result, time=0):
                 if event.button == 1:
                     flagUp = 1
         if flagDown and flagUp:
-            Button.pushed = 1
+            if 0.25 * width < x < 0.25 * width + width / 2 and 0.4 * height < y < 0.4 * height + height / 4:
+                but1.pushed = 1
+            elif 0.25 * width < x < 0.25 * width + width / 2 and 0.7 * height < y < 0.7 * height + height / 4:
+                but2.pushed = 1
             flagDown, flagUp = 0, 0
         else:
             Button.pushed = 0
+        if but1.pushed == 1:
+            return
+        elif but2.pushed == 1:
+            return boat_run(screen, 1)
         screen.blit(sc, (0, 0))
         if result == 'complete':
             time = str(time)[:5]
