@@ -22,7 +22,7 @@ frames_count = 104
 class RiverProperties:
     river_size = 10000
     river_curvature = 10000
-    current_level_id = 9
+    current_level_id = 2
     river_width_variants = [400, 387, 374, 361, 348, 335, 322, 309, 296, 283, 270, 257]
     river_width = river_width_variants[current_level_id - 1]
     boat_width_variants = [257, 240, 223, 206, 189, 172, 155, 138, 121, 104, 87, 70]
@@ -347,4 +347,4 @@ def boat_run(boat_screen, level_id):
 
 if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
-    boat_run(screen, 10)
+    boat_run(screen, 2)

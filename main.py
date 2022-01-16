@@ -2,10 +2,6 @@ from MainMenu.MainMenu import *
 from boat import boat_run
 
 
-icon = pygame.image.load('assets\\icon\\icon.png')
-pygame.display.set_icon(icon)
-
-
 def show_loading_screen():
     screen.fill('black')
     background = load_image('123.png', way_to_file='MainMenu/data')
@@ -66,6 +62,61 @@ def load_menu_with_buttons():
         screen.fill(pygame.Color("white"))
         image = screen.blit(load_image("123.png", way_to_file="MainMenu/data"),
                             pygame.Rect((0, 0), (WIDTH, HEIGHT)))
+        ONtext = "RiverDescent"
+        ONfont = pygame.font.Font(None, 120)
+        ONrendertext = ONfont.render(ONtext, True, (232, 194, 44))
+        ONw = ONrendertext.get_width()
+        ONh = ONrendertext.get_height()
+        ONx = 500 - ONw // 2
+        ONy = 100
+        screen.blit(ONrendertext, (ONx, ONy))
+        all_sprites.draw(screen)
+        try:
+            all_sprites.update()
+        except pygame.error:
+            return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def start_screen():
+    button = Button(300, 600, 400, 150, screen, 0, 1, ONtext=f"ИГРАТЬ",
+                    imagepath="MainMenu\\data", imagename="иконка228.png",
+                    ONtextcolor=(34, 139, 34), groups=(all_sprites, buttons))
+    running = True
+
+    def ex():
+        nonlocal running
+        running = False
+        button.kill()
+
+    button.signal.connect(ex)
+
+    flagDown = 0
+    flagUp = 0
+    while running:
+        WIDTH, HEIGHT = pygame.display.get_window_size()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                button.kill()
+                running = False
+            if event.type == pygame.MOUSEMOTION:
+                Button.xm, Button.ym = event.pos
+                x, y = event.pos
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    flagDown = 1
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    flagUp = 1
+        if flagDown and flagUp:
+            Button.pushed = 1
+            flagDown, flagUp = 0, 0
+        else:
+            Button.pushed = 0
+        screen.fill(pygame.Color("white"))
+        image = screen.blit(load_image("start_screen.png", way_to_file="assets/start_screen"),
+                            pygame.Rect((0, 0), (WIDTH, HEIGHT)))
         all_sprites.draw(screen)
         try:
             all_sprites.update()
@@ -76,6 +127,7 @@ def load_menu_with_buttons():
 
 
 def main():
+    start_screen()
     load_menu_with_buttons()
 
 
