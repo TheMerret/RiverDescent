@@ -6,7 +6,9 @@ import time
 import pygame
 
 from end_screen import *
-from river_generation import RiverGeneration, ObstaclesGeneration, ObstacleGeom, save_river_data, load_river_data
+from river_generation import (RiverGeneration, ObstaclesGeneration, ObstacleGeom, save_river_data,
+                              load_river_data)
+
 
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
@@ -177,6 +179,7 @@ def load_river_data_by_id(identifier: int):
 
 def get_river_data(level_id):
     generate = False
+    save = False
 
     if generate:
         rg = RiverGeneration(RiverProperties.river_size, 100)
@@ -184,10 +187,11 @@ def get_river_data(level_id):
 
         og = ObstaclesGeneration(river_geom, boat_size=(RiverProperties.boat_width, 300))
         obstacle_groups = og.get_obstacle_groups()
-        save_river_data_by_id(river_geom, obstacle_groups, level_id)
+        if save:
+            save_river_data_by_id(river_geom, obstacle_groups, level_id)
     else:
         river_geom, obstacle_groups = load_river_data_by_id(level_id)
-        RiverProperties.river_width = river_geom.width
+        RiverProperties.river_width = river_geom.width / 2
 
     return river_geom, obstacle_groups
 
@@ -209,8 +213,9 @@ def boat_run(boat_screen, level_id):
 
     a = (river_geom.left_bank, river_geom.right_bank)
     pol1, pol2 = a[0], a[1]
-    delta_x = pol1[1][0] - boat.x
-    delta_y = pol1[1][1] - boat.y
+    spawn_center = pol1[0]
+    delta_x = (spawn_center[0] - boat.x)
+    delta_y = (spawn_center[1] - boat.y)
     beach1 = Beach(pol1, 'right')  # сюда правого берега
     beach2 = Beach(pol2, 'left')  # сюда левого береша
     pier = Pier()
@@ -324,4 +329,4 @@ def boat_run(boat_screen, level_id):
 
 if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
-    boat_run(screen, 3)
+    boat_run(screen, 1)
