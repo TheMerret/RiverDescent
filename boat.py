@@ -167,7 +167,7 @@ class Beach(River):
         self.image.blit(grass, (0, 0), None, pygame.BLEND_RGBA_MULT)
 
 
-class Water(River):
+class Water(River): #
     def __init__(self, x, y):
         super(River, self).__init__(water_sprites)
         self.image = pygame.transform.scale(load_image('water/watero_o.jpg'), (13000, 11000))
