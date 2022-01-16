@@ -2,10 +2,11 @@ import math
 import os
 import random
 import time
-import pygame
-from end_screen import *
-from river_generation import RiverGeneration, ObstaclesGeneration, save_river_data, load_river_data
 
+import pygame
+
+from end_screen import *
+from river_generation import RiverGeneration, ObstaclesGeneration, ObstacleGeom, save_river_data, load_river_data
 
 size = width, height = 1000, 800
 all_sprites = pygame.sprite.Group()
@@ -60,7 +61,7 @@ class Boat(pygame.sprite.Sprite):
         self.rect = new_rect
         self.mask = pygame.mask.from_surface(self.image)
 
-    def update(self, beach1, beach2, obsts):
+    def update(self, beach1, beach2, obsts) -> bool:
         if pygame.sprite.collide_mask(self, beach1) or pygame.sprite.collide_mask(self, beach2):
             return False
         for i in obsts:
@@ -100,7 +101,8 @@ class Obstacle(pygame.sprite.Sprite):
 class Finish(pygame.sprite.Sprite):
     def __init__(self):
         super(Finish, self).__init__(river_sprites)
-        self.image = pygame.transform.scale(load_image('finish.png'), (RiverProperties.river_size, 100))
+        self.image = pygame.transform.scale(load_image('finish.png'),
+                                            (RiverProperties.river_size, 100))
         self.rect = self.image.get_rect()
         self.rect.y = -RiverProperties.river_size
         self.mask = pygame.mask.from_surface(self.image)
@@ -125,7 +127,7 @@ class River(pygame.sprite.Sprite):
     def __init__(self, polygon):
         super(River, self).__init__(river_sprites)
         self.image = pygame.Surface([5000, 5000], pygame.SRCALPHA, 32)
-        pygame.draw.polygon(self.image, 'blue', (polygon))
+        pygame.draw.polygon(self.image, 'blue', polygon)
         self.rect = self.image.get_rect()
         self.image = self.image.convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
@@ -144,14 +146,17 @@ class River(pygame.sprite.Sprite):
 class Beach(River):
     def __init__(self, polygon, site):
         super(River, self).__init__(river_sprites)
-        self.image = pygame.Surface([RiverProperties.river_size + width, RiverProperties.river_size + height], pygame.SRCALPHA, 32)
+        self.image = pygame.Surface(
+            [RiverProperties.river_size + width, RiverProperties.river_size + height],
+            pygame.SRCALPHA, 32)
         if site == 'left':
-            polygon = [(RiverProperties.river_size + width, RiverProperties.river_size * 2)] + [(RiverProperties.river_size + width, 0)] + polygon
+            polygon = [(RiverProperties.river_size + width, RiverProperties.river_size * 2)] + [
+                (RiverProperties.river_size + width, 0)] + polygon
             for i in range(len(polygon)):
                 polygon[i] = (polygon[i][0], polygon[i][1])
         if site == 'right':
             polygon = [(-width, 0)] + [(-width, RiverProperties.river_size * 2)] + polygon
-        pygame.draw.polygon(self.image, 'orange', (polygon))
+        pygame.draw.polygon(self.image, 'orange', polygon)
         self.rect = self.image.get_rect()
         self.image = self.image.convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
@@ -193,9 +198,9 @@ def clean_up():
     obst_sprites.empty()
 
 
-def boat_run(screen, level_id):
+def boat_run(boat_screen, level_id):
     pygame.display.set_caption("boat")
-    screen.fill('blue')
+    boat_screen.fill('blue')
     boat = Boat()
 
     river_geom, obstacle_groups = get_river_data(level_id)
@@ -204,18 +209,20 @@ def boat_run(screen, level_id):
 
     a = (river_geom.left_bank, river_geom.right_bank)
     pol1, pol2 = a[0], a[1]
-    delta_x = pol1[0][0] - boat.x
-    delta_y = pol1[0][1] - boat.y
+    delta_x = pol1[1][0] - boat.x
+    delta_y = pol1[1][1] - boat.y
     beach1 = Beach(pol1, 'right')  # сюда правого берега
     beach2 = Beach(pol2, 'left')  # сюда левого береша
     pier = Pier()
     for i in obstacles:
-        obst = Obstacle(i.normalized_rect)
+        i: ObstacleGeom
+        Obstacle(i.normalized_rect)
     beach1.rect.x = round(-delta_x - RiverProperties.river_width, 0)
     beach2.rect.x = round(-delta_x - RiverProperties.river_width, 0)
     beach1.rect.y = round(-delta_y, 0)
     beach2.rect.y = round(-delta_y, 0)
     for i in obst_sprites:
+        i: Obstacle
         i.rect.x = i.rect.x - delta_x - RiverProperties.river_width
         i.rect.y = i.rect.y - delta_y
         i.mask = pygame.mask.from_surface(i.image)
@@ -234,7 +241,6 @@ def boat_run(screen, level_id):
     textsurface = myfont.render(str(num), False, (255, 255, 255))
     finish = Finish()
     river_sprites.add(finish)
-    f = True
     tic = time.perf_counter()
     while running:
         if allow:
@@ -245,10 +251,9 @@ def boat_run(screen, level_id):
             boat.image = load_image(f'boat/change/{boat.frame}.png')
             boat.boat_image = boat.image
         boat.rotate()
-        screen.fill('blue')
+        boat_screen.fill('blue')
         if pygame.sprite.collide_mask(boat, finish):
             toc = time.perf_counter()
-            running = False
             clean_up()
             return show_end_screen('complete', toc - tic)
         if allow_left is True:
@@ -259,6 +264,7 @@ def boat_run(screen, level_id):
                 boat.angle -= 2
         if allow:
             for i in obst_sprites:
+                i: Obstacle
                 i.move('up', boat.angle)
                 if i.rect.y > height:
                     obst_sprites.remove(i)
@@ -302,16 +308,15 @@ def boat_run(screen, level_id):
             allow = True
             boat.update(beach1, beach2, obst_sprites)
             a = boat.update(beach1, beach2, obst_sprites)
-        obst_sprites.draw(screen)
-        river_sprites.draw(screen)
-        all_sprites.draw(screen)
+        obst_sprites.draw(boat_screen)
+        river_sprites.draw(boat_screen)
+        all_sprites.draw(boat_screen)
         if not allow:
-            screen.blit(textsurface, (width - 100, height - 150))
+            boat_screen.blit(textsurface, (width - 100, height - 150))
         pygame.display.flip()
         if allow:
             clock.tick(50)
         if not a:
-            running = False
             clean_up()
             return show_end_screen('fail')
     pygame.quit()
@@ -319,4 +324,4 @@ def boat_run(screen, level_id):
 
 if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
-    boat_run(screen, 1)
+    boat_run(screen, 3)
