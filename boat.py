@@ -37,6 +37,7 @@ def load_image(path):
     return im
 
 
+grass = pygame.transform.scale(load_image('grass/grass.jpg'), (13000, 11000)).convert_alpha()
 speed = 5
 
 
@@ -158,10 +159,11 @@ class Beach(River):
                 polygon[i] = (polygon[i][0], polygon[i][1])
         if site == 'right':
             polygon = [(-width, 0)] + [(-width, RiverProperties.river_size * 2)] + polygon
-        pygame.draw.polygon(self.image, (15, 255, 131), polygon)
+        pygame.draw.polygon(self.image, (255, 255, 255), polygon)
         self.rect = self.image.get_rect()
         self.image = self.image.convert_alpha()
         self.mask = pygame.mask.from_surface(self.image)
+        self.image.blit(grass, (0, 0), None, pygame.BLEND_RGBA_MULT)
 
 
 def save_river_data_by_id(river_geom, obstacle_groups, identifier: int):
@@ -247,9 +249,9 @@ def boat_run(boat_screen, level_id):
     finish = Finish()
     river_sprites.add(finish)
     tic = time.perf_counter()
-    water = load_image('water/watero_o.jpg')
+    water = pygame.transform.scale(load_image('water/watero_o.jpg'), (13000, 11000))
 
-    water_x, water_y = pol1[0][0] -delta_x - RiverProperties.river_width - 5000, -10000
+    water_x, water_y = -delta_x - RiverProperties.river_width, -10000
     d_x = 0
     d_y = 0
     while running:
@@ -263,8 +265,8 @@ def boat_run(boat_screen, level_id):
         boat.rotate()
         boat_screen.fill('blue')
         boat_screen.blit(water, (water_x, water_y))
-        water_x -= d_x
-        water_y -= d_y
+        water_x -= round(d_x, 0)
+        water_y -= round(d_y, 0)
         if pygame.sprite.collide_mask(boat, finish):
             toc = time.perf_counter()
             clean_up()
@@ -276,16 +278,16 @@ def boat_run(boat_screen, level_id):
             if boat.angle > - 90:
                 boat.angle -= 2
         if allow:
-            d_x = beach1.rect.x
-            d_y = beach1.rect.y
+            d_x = round(beach1.rect.x, 0)
+            d_y = round(beach1.rect.y, 0)
             for i in obst_sprites:
                 i: Obstacle
                 i.move('up', boat.angle)
                 if i.rect.y > height:
                     obst_sprites.remove(i)
             beach1.move('up', boat.angle)
-            d_x -= beach1.rect.x
-            d_y -= beach1.rect.y
+            d_x -= round(beach1.rect.x, 0)
+            d_y -= round(beach1.rect.y, 0)
             beach2.move('up', boat.angle)
             finish.rect.x = beach1.rect.x
             finish.rect.y = beach1.rect.y
