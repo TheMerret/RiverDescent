@@ -6,7 +6,9 @@
 ![alt text](https://github.com/TheMerret/RiverDescent/blob/master/presentation/gameplay/python_w1Bh6Kdf2Y.png?raw=true)
 
 ### Геймплей
-https://user-images.githubusercontent.com/88326901/149797959-f6411d05-1578-42e4-a51c-f025234eec66.mp4
+
+https://user-images.githubusercontent.com/88326901/149798800-5cdd3172-376f-4c39-978e-0fac91748c17.mp4
+
 Управление стрелочками
 
 
