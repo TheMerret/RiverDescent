@@ -3,11 +3,12 @@
 
 block_cipher = None
 
+base_path = '..\\src\\'
 
 a = Analysis(['..\\src\\main.py'],
              pathex=[],
              binaries=[],
-             datas=[],
+             datas=[(base_path + 'assets', '.\\assets'), (base_path + 'EndScreen\\data', '.\\EndScreen\\data'), (base_path + 'MainMenu\\data', '.\\MainMenu\\data'), (base_path + 'river_data', '.\\river_data')],
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},
@@ -33,7 +34,8 @@ exe = EXE(pyz,
           disable_windowed_traceback=False,
           target_arch=None,
           codesign_identity=None,
-          entitlements_file=None )
+          entitlements_file=None,
+          icon=base_path + 'assets\icon\icon.png')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
