@@ -21,7 +21,7 @@ def show_loading_screen():
 
 def load_menu_with_buttons():
     counting = 0
-    for i in range(300, 750, 250):
+    for i in range(250, 500, 140):
         for j in range(120, 880, 130):
             counting += 1
             button = Button(j, i, 100, 100, screen, 1, counting, imagepath="MainMenu\\data",
@@ -36,6 +36,19 @@ def load_menu_with_buttons():
                     slot(scrn, id_)
 
             button.signal.connect(slot)
+
+    rand_button = Button(1000 / 2 - 50, 540, 100, 100, screen, 1, counting,
+                         imagepath="MainMenu\\data",
+                         imagename="иконка42.png", ONtext=f"?",
+                         ONtextcolor=(232, 194, 44), UNDERtext=f"random level BETA",
+                         UNDERtextcolor=(232, 194, 44), groups=(all_sprites, buttons))
+
+    def slot(scrn=screen, id_=None):
+        show_loading_screen()
+        res = boat_run(scrn, id_)
+        if res == 'retry':
+            slot(scrn, id_)
+    rand_button.signal.connect(slot)
 
     running = True
     flagDown = 0

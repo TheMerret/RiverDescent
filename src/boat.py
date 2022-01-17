@@ -28,6 +28,13 @@ class RiverProperties:
     boat_width_variants = [257, 240, 223, 206, 189, 172, 155, 138, 121, 104, 87, 70]
     boat_width = boat_width_variants[current_level_id - 1]
 
+    @classmethod
+    def update_constants(cls, level_id):
+        river_width_variants = [400, 387, 374, 361, 348, 335, 322, 309, 296, 283, 270, 257]
+        cls.river_width = river_width_variants[level_id - 1]
+        boat_width_variants = [257, 240, 223, 206, 189, 172, 155, 138, 121, 104, 87, 70]
+        cls.boat_width = boat_width_variants[level_id - 1]
+
 
 def load_image(path):
     full_path = os.path.join('assets', path)
@@ -193,13 +200,14 @@ def get_river_data(level_id):
     generate = False
     save = False
 
-    if generate:
+    if generate or level_id is None:
+        RiverProperties.update_constants(random.randint(1, 12))
         rg = RiverGeneration(RiverProperties.river_size, 100)
         river_geom = rg.get_river_geom(RiverProperties.river_width, smooth=True)
 
         og = ObstaclesGeneration(river_geom, boat_size=(RiverProperties.boat_width, 300))
         obstacle_groups = og.get_obstacle_groups()
-        if save:
+        if save or level_id is not None:
             save_river_data_by_id(river_geom, obstacle_groups, level_id)
     else:
         river_geom, obstacle_groups = load_river_data_by_id(level_id)
