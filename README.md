@@ -1,4 +1,6 @@
 ## River Descent
+[![](https://tokei.rs/b1/github/TheMerret/RiverDescent)](https://github.com/TheMerret/RiverDescent)
+
 Проект Yandex Lyceum 2021 PyGame
 
 ### Описание
