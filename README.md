@@ -23,4 +23,4 @@ https://user-images.githubusercontent.com/88326901/149798800-5cdd3172-376f-4c39-
 
 ### Установка
 
-Скачайте Setup или архив программы. Эти файлы вы найдете в release.
+Скачайте Setup или архив программы. Эти файлы вы найдете в <a href="https://github.com/TheMerret/RiverDescent/releases">releases</a>.
